@@ -1,0 +1,30 @@
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.padded {
+  padding: 20px 22px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.titleGroup h3 {
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  margin-top: 3px;
+}

@@ -1,0 +1,52 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statsSection {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.statsSection h4 {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.statsGrid .field label {
+  font-size: 0.66rem;
+}
+
+.playerStatRow {
+  display: grid;
+  grid-template-columns: 1fr 90px 90px 90px;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.playerStatRow span {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding-bottom: 9px;
+}
+
+.scoreLabel {
+  font-size: var(--fs-xs);
+  text-align: center;
+  color: var(--text-faint);
+}

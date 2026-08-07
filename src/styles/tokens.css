@@ -1,0 +1,54 @@
+/**
+ * Design-Tokens der Beer Pong Championship. Bewusst als eigenständiges,
+ * dunkles "Arena-Scoreboard"-Thema gestaltet (kein hell/dunkel-Umschalten) –
+ * konsistent über die gesamte App hinweg verwendet.
+ */
+:root {
+  /* Flächen */
+  --bg: #0b0f14;
+  --bg-elevated: #121821;
+  --bg-elevated-2: #1a222e;
+  --bg-inset: #060a0e;
+
+  /* Linien */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text */
+  --text: #eef1f5;
+  --text-muted: #8b96a5;
+  --text-faint: #5b6472;
+
+  /* Marke */
+  --accent: #f5b40c;
+  --accent-strong: #ffcf40;
+  --accent-ink: #2a1c02;
+
+  /* Semantik */
+  --win: #35c98d;
+  --win-tint: rgba(53, 201, 141, 0.14);
+  --loss: #ef5350;
+  --loss-tint: rgba(239, 83, 80, 0.14);
+
+  /* Typografie */
+  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
+  --font-body: "Manrope", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  --fs-xs: 0.72rem;
+  --fs-sm: 0.83rem;
+  --fs-base: 0.95rem;
+  --fs-lg: 1.1rem;
+  --fs-xl: 1.4rem;
+  --fs-2xl: 2rem;
+  --fs-display: 3rem;
+
+  /* Radius & Schatten */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-card: 0 1px 0 var(--line), 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* Layout */
+  --sidebar-width: 232px;
+  --content-max: 1180px;
+}

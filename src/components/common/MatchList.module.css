@@ -1,0 +1,53 @@
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.side {
+  font-weight: 600;
+}
+
+.sideA {
+  text-align: right;
+}
+
+.score {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated-2);
+  min-width: 58px;
+  text-align: center;
+}
+
+.winnerA .side.sideA,
+.winnerB .side:not(.sideA) {
+  color: var(--accent);
+}
+
+.pending {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}

@@ -1,0 +1,77 @@
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  background: var(--bg-elevated-2);
+  border: 2px solid var(--line-strong);
+  color: var(--text);
+}
+
+.first .avatar {
+  border-color: var(--accent);
+  color: var(--accent);
+  width: 64px;
+  height: 64px;
+  font-size: 1.6rem;
+}
+
+.name {
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+.points {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: var(--fs-base);
+}
+
+.bar {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, var(--bg-elevated-2), var(--bg-inset));
+  border: 1px solid var(--line);
+  border-bottom: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--text-faint);
+}
+
+.first .bar {
+  height: 92px;
+  border-color: rgba(245, 180, 12, 0.35);
+  color: var(--accent);
+}
+.second .bar {
+  height: 66px;
+}
+.third .bar {
+  height: 48px;
+}

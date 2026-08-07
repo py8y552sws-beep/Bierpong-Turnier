@@ -1,0 +1,25 @@
+.wrap {
+  width: 100%;
+  height: 220px;
+}
+
+.tooltip {
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: var(--fs-xs);
+}
+
+.tooltipLabel {
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.tooltipValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
