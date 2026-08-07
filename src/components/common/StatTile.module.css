@@ -1,0 +1,40 @@
+.tile {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.8;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.meta {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}

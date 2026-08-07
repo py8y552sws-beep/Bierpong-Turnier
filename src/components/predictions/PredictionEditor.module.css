@@ -1,0 +1,42 @@
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.playerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: left;
+}
+
+.playerBtn:hover {
+  background: var(--bg-elevated-2);
+}
+
+.playerBtnActive {
+  background: var(--bg-elevated-2);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

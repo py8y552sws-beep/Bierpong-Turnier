@@ -1,0 +1,122 @@
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+.matchRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.matchSides {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.matchScore {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.matchMeta {
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+}
+
+.nextMatch {
+  text-align: center;
+  padding: 10px 0 4px;
+}
+
+.nextMatchSides {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.03em;
+  margin: 6px 0;
+}
+
+.miniList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.miniRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 4px;
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--line);
+}
+
+.miniRow:last-child {
+  border-bottom: none;
+}
+
+.miniRank {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  width: 20px;
+  display: inline-block;
+}
+
+.miniValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.challengeChip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  margin-bottom: 8px;
+}
+
+.challengeChip:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
