@@ -84,6 +84,13 @@
   text-align: right;
 }
 
+.challengeCell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 220px;
+}
+
 @media (max-width: 980px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);

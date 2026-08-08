@@ -7,6 +7,7 @@ import {
   deriveNextStageMatches,
   generateDoublesRoundRobin,
   generateSinglesRoundRobin,
+  reshuffleUpcomingMatches,
 } from "../logic/scheduleGenerator";
 import type {
   DoublesTeam,
@@ -32,6 +33,8 @@ interface TournamentActions {
   deleteMatch: (id: string) => void;
   setPrediction: (prediction: Prediction) => void;
   resetTournament: () => void;
+  /** Mischt nur die noch nicht gespielten Matches neu, Ergebnisse bleiben unangetastet. */
+  reshuffleSchedule: () => void;
 }
 
 export type TournamentStore = TournamentState & TournamentActions;
@@ -112,9 +115,27 @@ export const useTournamentStore = create<TournamentStore>()(
         })),
 
       resetTournament: () => set(buildInitialState(DEFAULT_DOUBLES_TEAMS)),
+
+      reshuffleSchedule: () => set((state) => ({ matches: reshuffleUpcomingMatches(state.matches) })),
     }),
     {
+      // Wichtig: dieser Name bleibt ab jetzt stabil. Schema-Änderungen laufen
+      // über `version` + `migrate` unten, damit bereits erfasste Ergebnisse
+      // bei App-Updates nicht verloren gehen (ein neuer Name würde für
+      // bestehende Nutzer:innen sonst wie ein kompletter Reset wirken).
       name: "beerpong-championship-v2",
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = persistedState as TournamentState;
+        if (version < 1 && state?.matches) {
+          // Migration von v0 (unversioniert): der Spielplan wurde damals in
+          // fester statt fairer/zufälliger Reihenfolge erzeugt. Bereits
+          // gespielte Matches bleiben unangetastet, nur die noch offenen
+          // werden einmalig neu gemischt.
+          return { ...state, matches: reshuffleUpcomingMatches(state.matches) };
+        }
+        return state;
+      },
       partialize: (state) => ({
         teams: state.teams,
         matches: state.matches,

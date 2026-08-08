@@ -72,11 +72,8 @@ export function ScoreEntry() {
     );
   }
 
-  function adjustScore(side: "A" | "B", delta: number) {
-    setDraft((d) => ({
-      ...d,
-      [side === "A" ? "scoreA" : "scoreB"]: Math.max(0, (side === "A" ? d.scoreA : d.scoreB) + delta),
-    }));
+  function setScore(side: "A" | "B", value: number) {
+    setDraft((d) => ({ ...d, [side === "A" ? "scoreA" : "scoreB"]: value }));
   }
 
   function adjustStat(kind: "bounce" | "streak" | "cups", playerId: string, delta: number) {
@@ -120,7 +117,7 @@ export function ScoreEntry() {
 
   return (
     <>
-      <PageHeader title="Ergebnis eintragen" subtitle="Tippe mit, während gespielt wird – ein Tap pro Becher." />
+      <PageHeader title="Ergebnis eintragen" subtitle="Endstand auswählen, Bounces zählen, speichern." />
 
       <Card>
         <div className={styles.pickerScroll}>
@@ -166,7 +163,7 @@ export function ScoreEntry() {
             match={selected}
             teams={teams}
             score={draft.scoreA}
-            onScoreChange={(delta) => adjustScore("A", delta)}
+            onScoreSelect={(value) => setScore("A", value)}
             draft={draft}
             onStatChange={adjustStat}
             isDoubles={isDoubles}
@@ -178,7 +175,7 @@ export function ScoreEntry() {
             match={selected}
             teams={teams}
             score={draft.scoreB}
-            onScoreChange={(delta) => adjustScore("B", delta)}
+            onScoreSelect={(value) => setScore("B", value)}
             draft={draft}
             onStatChange={adjustStat}
             isDoubles={isDoubles}
@@ -205,19 +202,21 @@ export function ScoreEntry() {
   );
 }
 
+const SCORE_OPTIONS = Array.from({ length: 11 }, (_, i) => i); // 0..10
+
 interface SidePanelProps {
   readonly side: "A" | "B";
   readonly match: Match;
   readonly teams: ReturnType<typeof useTeams>;
   readonly score: number;
-  readonly onScoreChange: (delta: number) => void;
+  readonly onScoreSelect: (value: number) => void;
   readonly draft: Draft;
   readonly onStatChange: (kind: "bounce" | "streak" | "cups", playerId: string, delta: number) => void;
   readonly isDoubles: boolean;
   readonly showDetails: boolean;
 }
 
-function SidePanel({ side, match, teams, score, onScoreChange, draft, onStatChange, isDoubles, showDetails }: SidePanelProps) {
+function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChange, isDoubles, showDetails }: SidePanelProps) {
   const matchSide: MatchSide = side === "A" ? match.sideA : match.sideB;
   const name = getSideLabel(matchSide, teams);
 
@@ -226,24 +225,17 @@ function SidePanel({ side, match, teams, score, onScoreChange, draft, onStatChan
       <span className={styles.sideName}>{name}</span>
       <SideFormDots playerId={!isDoubles ? matchSide.playerIds[0] : undefined} teamId={matchSide.teamId} />
 
-      <div className={styles.scoreControls}>
-        <button
-          type="button"
-          className={`${styles.scoreBtn} ${styles.scoreMinus}`}
-          onClick={() => onScoreChange(-1)}
-          aria-label={`${name}: Becher abziehen`}
-        >
-          −
-        </button>
-        <span className={styles.scoreValue}>{score}</span>
-        <button
-          type="button"
-          className={`${styles.scoreBtn} ${styles.scorePlus}`}
-          onClick={() => onScoreChange(1)}
-          aria-label={`${name}: Becher getroffen`}
-        >
-          +
-        </button>
+      <div className={styles.scoreGrid} role="group" aria-label={`${name}: Becher auswählen`}>
+        {SCORE_OPTIONS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`${styles.scoreOption} ${value === score ? styles.scoreOptionActive : ""}`}
+            onClick={() => onScoreSelect(value)}
+          >
+            {value}
+          </button>
+        ))}
       </div>
 
       <div className={styles.bounceBlock}>

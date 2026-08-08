@@ -1,4 +1,4 @@
-import type { Match } from "../types";
+import type { Match, PlayerId } from "../types";
 
 export interface PlayedMatch extends Match {
   readonly scoreA: number;
@@ -27,4 +27,11 @@ export function getRecentPlayedMatches(matches: readonly Match[], limit: number)
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, limit);
+}
+
+/** True, solange für diesen Spieler noch mindestens ein ungespieltes Match aussteht. */
+export function hasRemainingMatches(matches: readonly Match[], playerId: PlayerId): boolean {
+  return matches.some(
+    (m) => !isMatchPlayed(m) && (m.sideA.playerIds.includes(playerId) || m.sideB.playerIds.includes(playerId)),
+  );
 }
