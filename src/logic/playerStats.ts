@@ -1,5 +1,6 @@
 import { getPlayerName, PLAYERS } from "../constants/players";
 import type { DoublesTeam, Match, MatchPlayerStat, PlayerId, Prediction } from "../types";
+import { getSideLabel } from "../utils/matchLabels";
 import { calculateBaseStandingTotals } from "./baseTotals";
 import {
   calculateChallengeSummaries,
@@ -44,13 +45,17 @@ export interface PlayerProfileStats {
   readonly pointsProgression: readonly PointsProgressionPoint[];
 }
 
-function opponentLabel(match: PlayedMatch, playerId: PlayerId): string {
+function opponentLabel(match: PlayedMatch, playerId: PlayerId, teams: readonly DoublesTeam[]): string {
   const onSideA = match.sideA.playerIds.includes(playerId);
   const opponentSide = onSideA ? match.sideB : match.sideA;
-  return opponentSide.playerIds.map(getPlayerName).join(" & ");
+  return getSideLabel(opponentSide, teams);
 }
 
-function buildMatchHistory(matches: readonly Match[], playerId: PlayerId): PlayerMatchHistoryEntry[] {
+function buildMatchHistory(
+  matches: readonly Match[],
+  playerId: PlayerId,
+  teams: readonly DoublesTeam[],
+): PlayerMatchHistoryEntry[] {
   const playerMatches = getPlayedMatches(matches).filter(
     (m) => m.sideA.playerIds.includes(playerId) || m.sideB.playerIds.includes(playerId),
   );
@@ -64,7 +69,7 @@ function buildMatchHistory(matches: readonly Match[], playerId: PlayerId): Playe
       const opponentScore = onSideA ? match.scoreB : match.scoreA;
       return {
         match,
-        opponentLabel: opponentLabel(match, playerId),
+        opponentLabel: opponentLabel(match, playerId, teams),
         won: ownScore > opponentScore,
         ownScore,
         opponentScore,
@@ -117,7 +122,7 @@ export function calculatePlayerStats(
 
   const challengeSummaries = calculateChallengeSummaries(matches);
   const predictionResults = calculatePredictionResults(matches, teams, predictions);
-  const matchHistory = buildMatchHistory(matches, playerId);
+  const matchHistory = buildMatchHistory(matches, playerId, teams);
   const pointsProgression = buildPointsProgression(
     matchHistory,
     matches,

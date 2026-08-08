@@ -135,7 +135,12 @@ export const SHUTOUT_LOSING_SCORE = 0;
 /** Maximale Cup-Differenz einer Niederlage für die "No Big Loss"-Challenge. */
 export const MAX_LOSS_MARGIN_FOR_NO_BIG_LOSS = 5;
 
-/** Terminale Runden, aus denen sich Endplatzierungen automatisch ergeben. */
+/**
+ * Terminale Einzel-Runden, aus denen sich Endplatzierungen automatisch
+ * ergeben. Das Doppelturnier hat keine terminalen Runden – dort ergibt
+ * sich die Platzierung direkt aus der Abschlusstabelle der Punktrunde
+ * (siehe calculateDoublesStandings).
+ */
 export const SINGLES_PLACEMENT_ROUNDS = [
   "final",
   "third_place",
@@ -143,4 +148,8 @@ export const SINGLES_PLACEMENT_ROUNDS = [
   "seventh_place",
 ] as const;
 
-export const DOUBLES_PLACEMENT_ROUNDS = ["final", "third_place"] as const;
+/** Anzahl Runden-Matches im Doppel-Rundenturnier (4 Teams à je einmal gegeneinander). */
+export const DOUBLES_ROUND_ROBIN_MATCH_COUNT = 6;
+
+/** Anzahl Runden-Matches in der Einzel-Vorrunde (8 Spieler, jeder gegen jeden). */
+export const SINGLES_ROUND_ROBIN_MATCH_COUNT = 28;

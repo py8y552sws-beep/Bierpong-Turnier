@@ -68,7 +68,7 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
 
   function handleMatchTypeChange(next: MatchType) {
     setMatchType(next);
-    setRound(next === "singles" ? "group" : "semifinal");
+    setRound(next === "singles" ? "group" : "round_robin");
   }
 
   const sideAPlayers: PlayerId[] =

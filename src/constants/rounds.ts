@@ -1,7 +1,7 @@
 import type { DoublesRound, SinglesRound } from "../types";
 
 export const SINGLES_ROUND_LABELS: Readonly<Record<SinglesRound, string>> = {
-  group: "Gruppenphase",
+  group: "Vorrunde (Jeder gegen Jeden)",
   semifinal: "Halbfinale",
   consolation_semifinal: "Platzierungs-Halbfinale (5.-8.)",
   final: "Finale",
@@ -11,9 +11,7 @@ export const SINGLES_ROUND_LABELS: Readonly<Record<SinglesRound, string>> = {
 };
 
 export const DOUBLES_ROUND_LABELS: Readonly<Record<DoublesRound, string>> = {
-  semifinal: "Halbfinale",
-  final: "Finale",
-  third_place: "Spiel um Platz 3",
+  round_robin: "Rundenspiele (Jeder gegen Jeden)",
 };
 
 export const SINGLES_ROUNDS: readonly SinglesRound[] = [
@@ -26,7 +24,7 @@ export const SINGLES_ROUNDS: readonly SinglesRound[] = [
   "seventh_place",
 ];
 
-export const DOUBLES_ROUNDS: readonly DoublesRound[] = ["semifinal", "final", "third_place"];
+export const DOUBLES_ROUNDS: readonly DoublesRound[] = ["round_robin"];
 
 export function roundLabel(matchType: "singles" | "doubles", round: string): string {
   if (matchType === "singles") return SINGLES_ROUND_LABELS[round as SinglesRound] ?? round;
