@@ -20,20 +20,24 @@ export interface Player {
 
 export type TeamId = string;
 
-/** Ein Doppel-Team aus genau zwei Spielern, im Adminbereich festgelegt. */
+/**
+ * Ein Doppel-Team aus genau zwei Spielern, im Adminbereich festgelegt.
+ * `name` ist optional und frei durch das Team selbst wählbar; ohne
+ * eigenen Namen wird die Spielerpaarung als Anzeigename verwendet.
+ */
 export interface DoublesTeam {
   readonly id: TeamId;
   readonly playerIds: readonly [PlayerId, PlayerId];
+  readonly name?: string;
 }
 
 export type MatchType = "singles" | "doubles";
 
 /**
  * Turnierrunden. Die "terminalen" Platzierungsspiele (final, third_place,
- * fifth_place, seventh_place bei Einzel bzw. final, third_place bei Doppel)
- * bestimmen die Endplatzierung automatisch. "semifinal" bezeichnet das
- * Halbfinale um Platz 1-4, "consolation_semifinal" das Halbfinale der
- * Gruppenletzten um Platz 5-8 (nur Einzel).
+ * fifth_place, seventh_place) bestimmen die Einzel-Endplatzierung
+ * automatisch. "semifinal" bezeichnet das Halbfinale um Platz 1-4,
+ * "consolation_semifinal" das Halbfinale der Vorrundenletzten um Platz 5-8.
  */
 export type SinglesRound =
   | "group"
@@ -44,7 +48,12 @@ export type SinglesRound =
   | "fifth_place"
   | "seventh_place";
 
-export type DoublesRound = "semifinal" | "final" | "third_place";
+/**
+ * Das Doppelturnier besteht ausschließlich aus einer Punktrunde (jedes
+ * Team spielt einmal gegen jedes andere); die Endplatzierung ergibt sich
+ * automatisch aus der Abschlusstabelle, es gibt keine K.O.-Phase.
+ */
+export type DoublesRound = "round_robin";
 
 export type MatchRound = SinglesRound | DoublesRound;
 

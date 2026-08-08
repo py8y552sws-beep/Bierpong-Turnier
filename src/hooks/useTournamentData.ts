@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { PLAYERS } from "../constants/players";
 import { calculateChallengeSummaries } from "../logic/challenges";
+import { calculateDoublesStandings } from "../logic/doublesStandings";
 import { calculateSinglesGroupStandings } from "../logic/groupStandings";
 import { calculateAllLeaderboards, calculateLeaderboard, type LeaderboardMetric } from "../logic/leaderboards";
 import { getNextUpcomingMatch, getRecentPlayedMatches } from "../logic/matchStatus";
@@ -42,6 +43,7 @@ export function useTournamentActions() {
   return useTournamentStore(
     useShallow((s) => ({
       setDoublesTeams: s.setDoublesTeams,
+      setTeamName: s.setTeamName,
       addMatch: s.addMatch,
       updateMatch: s.updateMatch,
       deleteMatch: s.deleteMatch,
@@ -145,5 +147,12 @@ export function useSinglesPlacements() {
 
 export function useDoublesPlacements() {
   const matches = useMatches();
-  return useMemo(() => calculateDoublesTeamPlacements(matches), [matches]);
+  const teams = useTeams();
+  return useMemo(() => calculateDoublesTeamPlacements(matches, teams), [matches, teams]);
+}
+
+export function useDoublesStandings() {
+  const matches = useMatches();
+  const teams = useTeams();
+  return useMemo(() => calculateDoublesStandings(matches, teams), [matches, teams]);
 }

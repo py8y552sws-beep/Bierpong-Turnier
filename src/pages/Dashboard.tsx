@@ -12,20 +12,26 @@ import { roundLabel } from "../constants/rounds";
 import {
   useChallengeSummaries,
   useLeaderboard,
+  useMatches,
   useNextMatch,
   useOverallStandings,
   usePredictionResults,
   useRecentMatches,
+  useTeams,
   useTournamentStatus,
 } from "../hooks/useTournamentData";
 import { ONE_TIME_CHALLENGES } from "../constants/points";
 import { getPlayerName } from "../constants/players";
+import { getPlayedMatches } from "../logic/matchStatus";
 import { getMatchTitle } from "../utils/matchLabels";
 import styles from "./Dashboard.module.css";
 
 export function Dashboard() {
   const standings = useOverallStandings();
   const status = useTournamentStatus();
+  const teams = useTeams();
+  const matches = useMatches();
+  const playedCount = getPlayedMatches(matches).length;
   const recentMatches = useRecentMatches(5);
   const nextMatch = useNextMatch();
   const predictionResults = usePredictionResults();
@@ -61,7 +67,7 @@ export function Dashboard() {
         <StatTile label="Führender" value={leader ? leader.playerName : "–"} icon={IconTrophy} meta={leader ? `${leader.totalPoints} Punkte` : undefined} />
         <StatTile label="Einzel" value={status.singlesComplete ? "Beendet" : "Läuft"} />
         <StatTile label="Doppel" value={status.doublesComplete ? "Beendet" : "Läuft"} />
-        <StatTile label="Gespielte Matches" value={recentMatches.length > 0 ? recentMatches.length : 0} meta="zuletzt erfasst" />
+        <StatTile label="Gespielte Matches" value={playedCount} meta={`von ${matches.length} angesetzt`} />
       </div>
 
       <div className={styles.grid}>
@@ -118,7 +124,7 @@ export function Dashboard() {
                     <Badge variant={match.matchType === "singles" ? "neutral" : "accent"}>
                       {match.matchType === "singles" ? "Einzel" : "Doppel"}
                     </Badge>
-                    {getMatchTitle(match)}
+                    {getMatchTitle(match, teams)}
                   </div>
                   <div>
                     <span className={styles.matchScore}>
@@ -139,7 +145,7 @@ export function Dashboard() {
                 <Badge variant={nextMatch.matchType === "singles" ? "neutral" : "accent"}>
                   {roundLabel(nextMatch.matchType, nextMatch.round)}
                 </Badge>
-                <div className={styles.nextMatchSides}>{getMatchTitle(nextMatch)}</div>
+                <div className={styles.nextMatchSides}>{getMatchTitle(nextMatch, teams)}</div>
               </div>
             ) : (
               <EmptyState message="Kein geplantes Spiel offen." />

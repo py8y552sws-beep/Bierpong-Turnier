@@ -71,5 +71,8 @@ export function calculateSinglesGroupStandings(
         diff: cupsFor - cupsAgainst,
       };
     })
-    .sort((a, b) => b.wins - a.wins || b.diff - a.diff || b.cupsFor - a.cupsFor);
+    .sort(
+      (a, b) =>
+        b.wins - a.wins || b.diff - a.diff || b.cupsFor - a.cupsFor || a.playerName.localeCompare(b.playerName),
+    );
 }

@@ -74,15 +74,18 @@ function singlesSemifinalists(matches: readonly Match[]): PlayerId[] {
   return [...players];
 }
 
-function doublesFinalists(matches: readonly Match[]): TeamId[] {
-  const teams = new Set<TeamId>();
-  for (const match of matches) {
-    if (match.matchType === "doubles" && match.round === "final") {
-      if (match.sideA.teamId) teams.add(match.sideA.teamId);
-      if (match.sideB.teamId) teams.add(match.sideB.teamId);
-    }
-  }
-  return [...teams];
+/**
+ * "Finale Doppel" gibt es im reinen Punktrundenformat nicht mehr als
+ * eigenes Match – als tatsächliche Antwort gelten die beiden Teams auf
+ * Platz 1 und 2 der Abschlusstabelle (erst befüllt, wenn die Punktrunde
+ * komplett gespielt ist).
+ */
+function doublesFinalists(
+  doublesPlacements: Partial<Record<TeamId, number>>,
+): TeamId[] {
+  return Object.entries(doublesPlacements)
+    .filter(([, rank]) => rank === 1 || rank === 2)
+    .map(([teamId]) => teamId);
 }
 
 function playerAtRank(
@@ -106,7 +109,7 @@ export function calculateActualPredictionAnswers(
   teams: readonly DoublesTeam[],
 ): ActualPredictionAnswers {
   const singlesPlacements = calculateSinglesPlacements(matches);
-  const doublesPlacements = calculateDoublesTeamPlacements(matches);
+  const doublesPlacements = calculateDoublesTeamPlacements(matches, teams);
   const aggregates = calculatePlayerMatchAggregates(matches);
   const baseTotals = calculateBaseStandingTotals(matches, teams);
 
@@ -118,7 +121,7 @@ export function calculateActualPredictionAnswers(
     singlesWinner: playerAtRank(singlesPlacements, 1),
     doublesWinner: Object.entries(doublesPlacements).find(([, r]) => r === 1)?.[0] ?? null,
     singlesSemifinalists: singlesSemifinalists(matches),
-    doublesFinalists: doublesFinalists(matches),
+    doublesFinalists: doublesFinalists(doublesPlacements),
     singlesLastPlace: playerAtRank(singlesPlacements, 8),
     overallWinnerCandidates: findExtremeCandidates(baseTotals, "max"),
     overallLastPlaceCandidates: findExtremeCandidates(baseTotals, "min"),

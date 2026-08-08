@@ -52,10 +52,15 @@ export function AdminTeams() {
     }
 
     setError(null);
-    const next: DoublesTeam[] = slots.map((slot, i) => ({
-      id: TEAM_SLOT_IDS[i]!,
-      playerIds: [slot[0] as PlayerId, slot[1] as PlayerId],
-    }));
+    const next: DoublesTeam[] = slots.map((slot, i) => {
+      const slotId = TEAM_SLOT_IDS[i]!;
+      const existingName = teams.find((t) => t.id === slotId)?.name;
+      return {
+        id: slotId,
+        playerIds: [slot[0] as PlayerId, slot[1] as PlayerId],
+        ...(existingName ? { name: existingName } : {}),
+      };
+    });
     setDoublesTeams(next);
   }
 

@@ -1,24 +1,27 @@
+import { useState } from "react";
 import { Card } from "../components/common/Card";
 import { EmptyState } from "../components/common/EmptyState";
 import { MatchList } from "../components/common/MatchList";
 import { PageHeader } from "../components/common/PageHeader";
 import tableStyles from "../components/common/table.module.css";
 import { DOUBLES_PLACEMENT_POINTS } from "../constants/points";
-import { DOUBLES_ROUND_LABELS } from "../constants/rounds";
-import { useDoublesPlacements, useMatches, useTeams } from "../hooks/useTournamentData";
+import {
+  useDoublesPlacements,
+  useDoublesStandings,
+  useMatches,
+  useTeams,
+  useTournamentActions,
+} from "../hooks/useTournamentData";
+import { getPlayerName } from "../constants/players";
 import { getTeamLabel } from "../utils/matchLabels";
-import styles from "./SinglesTournament.module.css";
-
-const ROUNDS = [
-  { round: "semifinal" as const, label: DOUBLES_ROUND_LABELS.semifinal },
-  { round: "final" as const, label: DOUBLES_ROUND_LABELS.final },
-  { round: "third_place" as const, label: DOUBLES_ROUND_LABELS.third_place },
-];
+import type { DoublesTeam } from "../types";
+import styles from "./DoublesTournament.module.css";
 
 export function DoublesTournament() {
   const teams = useTeams();
   const matches = useMatches();
   const doublesMatches = matches.filter((m) => m.matchType === "doubles");
+  const standings = useDoublesStandings();
   const placements = useDoublesPlacements();
 
   const championTeamId = Object.entries(placements).find(([, rank]) => rank === 1)?.[0];
@@ -26,7 +29,10 @@ export function DoublesTournament() {
 
   return (
     <>
-      <PageHeader title="Doppelturnier" subtitle="4 Teams · Halbfinale, Finale und Spiel um Platz 3." />
+      <PageHeader
+        title="Doppelturnier"
+        subtitle="4 Teams · Jeder gegen Jeden, die Endplatzierung ergibt sich aus der Abschlusstabelle."
+      />
 
       {championTeam && (
         <div className={styles.placementBanner}>
@@ -35,23 +41,46 @@ export function DoublesTournament() {
         </div>
       )}
 
-      <Card title="Teams" subtitle="Im Adminbereich festgelegt">
+      <Card title="Teams" subtitle="Spielerpaarungen werden im Adminbereich festgelegt – der Teamname darf frei gewählt werden">
         {teams.length === 0 ? (
           <EmptyState message="Noch keine Doppelteams festgelegt." />
+        ) : (
+          teams.map((team) => <TeamRow key={team.id} team={team} />)
+        )}
+      </Card>
+
+      <div style={{ height: 20 }} />
+
+      <Card title="Tabelle" subtitle="Automatisch aus den Rundenspielen berechnet">
+        {standings.every((s) => s.wins === 0 && s.losses === 0) ? (
+          <EmptyState message="Noch keine Rundenspiele erfasst." />
         ) : (
           <div className={tableStyles.tableWrap}>
             <table className={tableStyles.table}>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Team</th>
-                  <th>Spieler</th>
+                  <th className={tableStyles.num}>S</th>
+                  <th className={tableStyles.num}>N</th>
+                  <th className={tableStyles.num}>Cups +/-</th>
+                  <th className={tableStyles.num}>Diff</th>
                 </tr>
               </thead>
               <tbody>
-                {teams.map((team, i) => (
-                  <tr key={team.id}>
-                    <td>Team {i + 1}</td>
-                    <td>{getTeamLabel(team)}</td>
+                {standings.map((s, i) => (
+                  <tr key={s.teamId} className={i === 0 && s.wins > 0 ? tableStyles.highlightRow : ""}>
+                    <td className={tableStyles.rankCell}>{i + 1}</td>
+                    <td>{s.teamName}</td>
+                    <td className={tableStyles.num}>{s.wins}</td>
+                    <td className={tableStyles.num}>{s.losses}</td>
+                    <td className={tableStyles.num}>
+                      {s.cupsFor}:{s.cupsAgainst}
+                    </td>
+                    <td className={tableStyles.num}>
+                      {s.diff > 0 ? "+" : ""}
+                      {s.diff}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -62,13 +91,9 @@ export function DoublesTournament() {
 
       <div style={{ height: 20 }} />
 
-      <div className={styles.roundsGrid}>
-        {ROUNDS.map(({ round, label }) => (
-          <Card key={round} title={label}>
-            <MatchList matches={doublesMatches.filter((m) => m.round === round)} emptyMessage="Noch nicht angesetzt." />
-          </Card>
-        ))}
-      </div>
+      <Card title="Rundenspiele">
+        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." />
+      </Card>
 
       <div style={{ height: 20 }} />
 
@@ -99,5 +124,37 @@ export function DoublesTournament() {
         </div>
       </Card>
     </>
+  );
+}
+
+function TeamRow({ team }: { team: DoublesTeam }) {
+  const { setTeamName } = useTournamentActions();
+  const [value, setValue] = useState(team.name ?? "");
+
+  function commit() {
+    if (value.trim() !== (team.name ?? "")) {
+      setTeamName(team.id, value.trim());
+    }
+  }
+
+  return (
+    <div className={styles.teamRow}>
+      <div className={styles.teamNameField}>
+        <label htmlFor={`team-name-${team.id}`}>Teamname</label>
+        <input
+          id={`team-name-${team.id}`}
+          className={styles.teamNameInput}
+          value={value}
+          placeholder={team.playerIds.map(getPlayerName).join(" & ")}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+          maxLength={30}
+        />
+      </div>
+      <span className={styles.teamPlayers}>{team.playerIds.map(getPlayerName).join(" & ")}</span>
+    </div>
   );
 }

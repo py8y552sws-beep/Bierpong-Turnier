@@ -21,6 +21,7 @@ const KNOCKOUT_ROUNDS = [
 export function SinglesTournament() {
   const matches = useMatches();
   const singlesMatches = matches.filter((m) => m.matchType === "singles");
+  const groupMatches = singlesMatches.filter((m) => m.round === "group");
   const groupStandings = useSinglesGroupStandings();
   const placements = useSinglesPlacements();
 
@@ -28,7 +29,10 @@ export function SinglesTournament() {
 
   return (
     <>
-      <PageHeader title="Einzelturnier" subtitle="8 Spieler · Gruppenphase + Platzierungsrunden (Platz 1-8)." />
+      <PageHeader
+        title="Einzelturnier"
+        subtitle="8 Spieler · Vorrunde (jeder gegen jeden), danach K.O.-Runden für Platz 1-8."
+      />
 
       {champion && (
         <div className={styles.placementBanner}>
@@ -37,9 +41,12 @@ export function SinglesTournament() {
         </div>
       )}
 
-      <Card title="Gruppenphase – Tabelle" subtitle="Automatisch aus den Gruppenspielen berechnet">
+      <Card
+        title="Vorrunde – Tabelle"
+        subtitle="Automatisch aus den Vorrundenspielen berechnet · Platz 1-4 spielen im Halbfinale um den Titel, Platz 5-8 um die Plätze 5-8"
+      >
         {groupStandings.length === 0 ? (
-          <EmptyState message="Noch keine Gruppenspiele erfasst." />
+          <EmptyState message="Noch keine Vorrundenspiele erfasst." />
         ) : (
           <div className={tableStyles.tableWrap}>
             <table className={tableStyles.table}>
@@ -55,7 +62,7 @@ export function SinglesTournament() {
               </thead>
               <tbody>
                 {groupStandings.map((s, i) => (
-                  <tr key={s.playerId}>
+                  <tr key={s.playerId} className={i < 4 ? tableStyles.highlightRow : ""}>
                     <td className={tableStyles.rankCell}>{i + 1}</td>
                     <td>{s.playerName}</td>
                     <td className={tableStyles.num}>{s.wins}</td>
@@ -77,10 +84,19 @@ export function SinglesTournament() {
 
       <div style={{ height: 20 }} />
 
+      <Card title="Vorrunde – Spiele" subtitle={`${groupMatches.length} Spiele, jeder gegen jeden`}>
+        <MatchList matches={groupMatches} emptyMessage="Noch nicht angesetzt." />
+      </Card>
+
+      <div style={{ height: 20 }} />
+
       <div className={styles.roundsGrid}>
         {KNOCKOUT_ROUNDS.map(({ round, label }) => (
           <Card key={round} title={label}>
-            <MatchList matches={singlesMatches.filter((m) => m.round === round)} emptyMessage="Noch nicht angesetzt." />
+            <MatchList
+              matches={singlesMatches.filter((m) => m.round === round)}
+              emptyMessage="Steht erst nach Abschluss der Vorrunde fest."
+            />
           </Card>
         ))}
       </div>
