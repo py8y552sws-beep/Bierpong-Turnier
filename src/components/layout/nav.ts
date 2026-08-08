@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import {
   IconAdmin,
+  IconBolt,
   IconChart,
   IconClipboard,
   IconDashboard,
@@ -18,6 +19,7 @@ export interface NavItem {
 
 export const PRIMARY_NAV: readonly NavItem[] = [
   { to: "/", label: "Dashboard", icon: IconDashboard, end: true },
+  { to: "/eingabe", label: "Ergebnis eintragen", icon: IconBolt },
   { to: "/spieler", label: "Spieler", icon: IconUsers },
   { to: "/einzelturnier", label: "Einzelturnier", icon: IconTrophy },
   { to: "/doppelturnier", label: "Doppelturnier", icon: IconDoubles },

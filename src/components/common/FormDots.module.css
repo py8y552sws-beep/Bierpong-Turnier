@@ -1,0 +1,26 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.win {
+  background: var(--win);
+}
+
+.loss {
+  background: var(--loss);
+}
+
+.empty {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  font-style: italic;
+}

@@ -172,6 +172,14 @@ export function IconEdit(props: IconProps) {
   );
 }
 
+export function IconBolt(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconAlert(props: IconProps) {
   return (
     <svg {...base} {...props}>

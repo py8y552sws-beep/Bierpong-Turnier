@@ -3,6 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { PLAYERS } from "../constants/players";
 import { calculateChallengeSummaries } from "../logic/challenges";
 import { calculateDoublesStandings } from "../logic/doublesStandings";
+import { calculatePlayerForm, calculateTeamForm } from "../logic/form";
 import { calculateSinglesGroupStandings } from "../logic/groupStandings";
 import { calculateAllLeaderboards, calculateLeaderboard, type LeaderboardMetric } from "../logic/leaderboards";
 import { getNextUpcomingMatch, getRecentPlayedMatches } from "../logic/matchStatus";
@@ -149,6 +150,16 @@ export function useDoublesPlacements() {
   const matches = useMatches();
   const teams = useTeams();
   return useMemo(() => calculateDoublesTeamPlacements(matches, teams), [matches, teams]);
+}
+
+export function usePlayerForm(playerId: PlayerId, limit?: number) {
+  const matches = useMatches();
+  return useMemo(() => calculatePlayerForm(matches, playerId, limit), [matches, playerId, limit]);
+}
+
+export function useTeamForm(teamId: string, limit?: number) {
+  const matches = useMatches();
+  return useMemo(() => calculateTeamForm(matches, teamId, limit), [matches, teamId, limit]);
 }
 
 export function useDoublesStandings() {
