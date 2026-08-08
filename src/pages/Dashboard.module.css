@@ -64,6 +64,19 @@
   margin: 6px 0;
 }
 
+.nextMatchAction {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nextMatchAction:hover {
+  text-decoration: underline;
+}
+
 .miniList {
   display: flex;
   flex-direction: column;

@@ -146,6 +146,9 @@ export function Dashboard() {
                   {roundLabel(nextMatch.matchType, nextMatch.round)}
                 </Badge>
                 <div className={styles.nextMatchSides}>{getMatchTitle(nextMatch, teams)}</div>
+                <Link className={styles.nextMatchAction} to="/eingabe">
+                  Ergebnis eintragen →
+                </Link>
               </div>
             ) : (
               <EmptyState message="Kein geplantes Spiel offen." />

@@ -1,34 +1,64 @@
 import { PLAYER_IDS } from "../constants/players";
 import type { DoublesTeam, Match, MatchInput, PlayerId, SinglesRound } from "../types";
+import { shuffle } from "../utils/random";
 import { calculateSinglesGroupStandings } from "./groupStandings";
 import { isMatchPlayed, type PlayedMatch } from "./matchStatus";
 
 /**
+ * Teilt eine (gerade Anzahl an) Teilnehmer in Runden ein, in denen jeder
+ * Teilnehmer genau einmal pro Runde spielt ("Circle-Method"/Polygon-
+ * Verfahren für Rundenturnier-Spielpläne). So entstehen bei n Teilnehmern
+ * n-1 Runden mit je n/2 Paarungen – jeder wartet dadurch zwischen seinen
+ * Spielen ungefähr gleich lange, statt dass ein Spieler mehrfach hinter-
+ * einander und ein anderer erst ganz am Ende zum Zug kommt.
+ */
+function circleMethodRounds<T>(items: readonly T[]): Array<Array<readonly [T, T]>> {
+  const n = items.length;
+  const fixed = items[0]!;
+  let rotating = items.slice(1);
+  const rounds: Array<Array<readonly [T, T]>> = [];
+
+  for (let round = 0; round < n - 1; round++) {
+    const pairs: Array<readonly [T, T]> = [[fixed, rotating[0]!]];
+    for (let i = 1; i < n / 2; i++) {
+      pairs.push([rotating[i]!, rotating[n - 1 - i]!]);
+    }
+    rounds.push(pairs);
+    rotating = [rotating[rotating.length - 1]!, ...rotating.slice(0, rotating.length - 1)];
+  }
+
+  return rounds;
+}
+
+/**
+ * Erzeugt eine faire und zugleich zufällige Paarungsreihenfolge für ein
+ * vollständiges Rundenturnier: Teilnehmer-Reihenfolge, Runden-Reihenfolge
+ * und die Paarungen innerhalb jeder Runde werden zufällig gemischt, die
+ * Circle-Method sorgt aber weiterhin dafür, dass jeder Teilnehmer in jeder
+ * Runde genau einmal spielt.
+ */
+function fairRandomPairOrder<T>(items: readonly T[]): Array<readonly [T, T]> {
+  const rounds = circleMethodRounds(shuffle(items)).map((round) => shuffle(round));
+  return shuffle(rounds).flat();
+}
+
+/**
  * Generiert die vollständige Einzel-Vorrunde: jeder der 8 Spieler spielt
  * einmal gegen jeden anderen (28 Matches), alle zunächst ohne Ergebnis.
+ * Die Reihenfolge ist zufällig, aber so verteilt, dass jeder Spieler
+ * zwischen seinen Spielen ungefähr gleich lange Pause hat.
  */
 export function generateSinglesRoundRobin(): MatchInput[] {
-  const inputs: MatchInput[] = [];
-  for (let i = 0; i < PLAYER_IDS.length; i++) {
-    for (let j = i + 1; j < PLAYER_IDS.length; j++) {
-      inputs.push(singlesMatchInput("group", PLAYER_IDS[i]!, PLAYER_IDS[j]!));
-    }
-  }
-  return inputs;
+  return fairRandomPairOrder(PLAYER_IDS).map(([a, b]) => singlesMatchInput("group", a, b));
 }
 
 /**
  * Generiert die vollständige Doppel-Punktrunde: jedes der 4 Teams spielt
  * einmal gegen jedes andere Team (6 Matches), alle zunächst ohne Ergebnis.
+ * Ebenfalls zufällig, aber gleichmäßig auf Wartezeiten verteilt.
  */
 export function generateDoublesRoundRobin(teams: readonly DoublesTeam[]): MatchInput[] {
-  const inputs: MatchInput[] = [];
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      inputs.push(doublesMatchInput(teams[i]!, teams[j]!));
-    }
-  }
-  return inputs;
+  return fairRandomPairOrder(teams).map(([a, b]) => doublesMatchInput(a, b));
 }
 
 function singlesMatchInput(round: SinglesRound, a: PlayerId, b: PlayerId): MatchInput {
