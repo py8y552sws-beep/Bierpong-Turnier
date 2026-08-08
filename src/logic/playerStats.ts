@@ -4,6 +4,8 @@ import { getSideLabel } from "../utils/matchLabels";
 import { calculateBaseStandingTotals } from "./baseTotals";
 import {
   calculateChallengeSummaries,
+  calculateMatchChallenges,
+  type MatchChallengeEntry,
   type PlayerChallengeSummary,
 } from "./challenges";
 import { averageCups, calculatePlayerMatchAggregates, winRate } from "./matchAggregates";
@@ -18,6 +20,7 @@ export interface PlayerMatchHistoryEntry {
   readonly ownScore: number;
   readonly opponentScore: number;
   readonly ownStat: MatchPlayerStat | undefined;
+  readonly challenges: readonly MatchChallengeEntry[];
 }
 
 export interface PointsProgressionPoint {
@@ -74,6 +77,7 @@ function buildMatchHistory(
         ownScore,
         opponentScore,
         ownStat: match.playerStats.find((s) => s.playerId === playerId),
+        challenges: calculateMatchChallenges(matches, match.id).filter((c) => c.playerId === playerId),
       };
     });
 }

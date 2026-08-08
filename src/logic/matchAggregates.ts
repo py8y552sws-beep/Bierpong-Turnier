@@ -154,8 +154,20 @@ export function averageCups(aggregate: PlayerMatchAggregate): number {
   return aggregate.cups / aggregate.matchesPlayed;
 }
 
+/** Jeder Spieler spielt in der Vorrunde gegen alle anderen 7 Spieler. */
+export const SINGLES_GROUP_MATCHES_PER_PLAYER = PLAYER_IDS.length - 1;
+
+/**
+ * Erst wahr, wenn der Spieler seine komplette Vorrunde (alle 7 Spiele)
+ * absolviert und dabei jedes einzelne gewonnen hat – nicht schon nach dem
+ * ersten Sieg (sonst wäre die Challenge nach jedem Turnierstart-Sieg
+ * fälschlich "erreicht", obwohl die Vorrunde noch läuft).
+ */
 export function isUnbeatenInGroupStage(aggregate: PlayerMatchAggregate): boolean {
-  return aggregate.groupMatchesPlayed > 0 && aggregate.groupWins === aggregate.groupMatchesPlayed;
+  return (
+    aggregate.groupMatchesPlayed === SINGLES_GROUP_MATCHES_PER_PLAYER &&
+    aggregate.groupWins === SINGLES_GROUP_MATCHES_PER_PLAYER
+  );
 }
 
 export function neverLostByMoreThan(

@@ -92,7 +92,7 @@ export function DoublesTournament() {
       <div style={{ height: 20 }} />
 
       <Card title="Rundenspiele">
-        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." />
+        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." showChallenges />
       </Card>
 
       <div style={{ height: 20 }} />

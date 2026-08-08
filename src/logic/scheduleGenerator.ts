@@ -43,6 +43,28 @@ function fairRandomPairOrder<T>(items: readonly T[]): Array<readonly [T, T]> {
 }
 
 /**
+ * Mischt ausschließlich die noch nicht gespielten Matches neu (zufällige
+ * Reihenfolge), ohne bereits erfasste Ergebnisse anzutasten. Einzel- und
+ * Doppel-Matches werden getrennt gemischt, Einzel-Vorrunde bleibt dabei
+ * immer vor der Doppel-Punktrunde einsortiert. Wird sowohl für die
+ * einmalige Migration bestehender Turniere als auch für die manuelle
+ * "Spielplan neu mischen"-Aktion im Adminbereich verwendet.
+ */
+export function reshuffleUpcomingMatches(matches: readonly Match[]): Match[] {
+  const played = matches.filter(isMatchPlayed);
+  const upcomingSingles = shuffle(matches.filter((m) => !isMatchPlayed(m) && m.matchType === "singles"));
+  const upcomingDoubles = shuffle(matches.filter((m) => !isMatchPlayed(m) && m.matchType === "doubles"));
+
+  const baseTime = Date.now();
+  const reordered = [...upcomingSingles, ...upcomingDoubles].map((m, index) => ({
+    ...m,
+    createdAt: new Date(baseTime + index).toISOString(),
+  }));
+
+  return [...played, ...reordered];
+}
+
+/**
  * Generiert die vollständige Einzel-Vorrunde: jeder der 8 Spieler spielt
  * einmal gegen jeden anderen (28 Matches), alle zunächst ohne Ergebnis.
  * Die Reihenfolge ist zufällig, aber so verteilt, dass jeder Spieler

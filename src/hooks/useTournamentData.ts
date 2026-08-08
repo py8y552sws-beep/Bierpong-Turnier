@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { PLAYERS } from "../constants/players";
-import { calculateChallengeSummaries } from "../logic/challenges";
+import { calculateChallengeSummaries, calculateMatchChallenges } from "../logic/challenges";
 import { calculateDoublesStandings } from "../logic/doublesStandings";
 import { calculatePlayerForm, calculateTeamForm } from "../logic/form";
 import { calculateSinglesGroupStandings } from "../logic/groupStandings";
@@ -50,6 +50,7 @@ export function useTournamentActions() {
       deleteMatch: s.deleteMatch,
       setPrediction: s.setPrediction,
       resetTournament: s.resetTournament,
+      reshuffleSchedule: s.reshuffleSchedule,
     })),
   );
 }
@@ -150,6 +151,11 @@ export function useDoublesPlacements() {
   const matches = useMatches();
   const teams = useTeams();
   return useMemo(() => calculateDoublesTeamPlacements(matches, teams), [matches, teams]);
+}
+
+export function useMatchChallenges(matchId: string) {
+  const matches = useMatches();
+  return useMemo(() => calculateMatchChallenges(matches, matchId), [matches, matchId]);
 }
 
 export function usePlayerForm(playerId: PlayerId, limit?: number) {

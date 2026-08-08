@@ -80,6 +80,7 @@ function PlayerProfileContent({ playerId }: { playerId: import("../types").Playe
                       <th className={tableStyles.num}>Cups</th>
                       <th className={tableStyles.num}>Bounce</th>
                       <th className={tableStyles.num}>Serie</th>
+                      <th>Challenges</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -101,6 +102,15 @@ function PlayerProfileContent({ playerId }: { playerId: import("../types").Playe
                           <td className={tableStyles.num}>{entry.ownStat?.cups ?? "–"}</td>
                           <td className={tableStyles.num}>{entry.ownStat?.bounceHits ?? "–"}</td>
                           <td className={tableStyles.num}>{entry.ownStat?.longestStreak ?? "–"}</td>
+                          <td className={styles.challengeCell}>
+                            {entry.challenges.length === 0
+                              ? "–"
+                              : entry.challenges.map((c, i) => (
+                                  <Badge key={i} variant="accent">
+                                    {c.label} +{c.points}
+                                  </Badge>
+                                ))}
+                          </td>
                         </tr>
                       ))}
                   </tbody>

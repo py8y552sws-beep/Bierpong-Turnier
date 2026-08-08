@@ -68,52 +68,41 @@
   font-weight: 700;
 }
 
-.scoreControls {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.scoreGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  width: 100%;
   margin-top: 6px;
 }
 
-.scoreBtn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+.scoreOption {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--line-strong);
   background: var(--bg-elevated-2);
   color: var(--text);
-  font-family: var(--font-display);
-  font-size: 1.8rem;
-  line-height: 1;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: manipulation;
   user-select: none;
-  transition: transform 0.06s ease, border-color 0.12s ease;
+  transition: transform 0.06s ease, border-color 0.12s ease, background-color 0.12s ease;
 }
 
-.scoreBtn:active {
+.scoreOption:active {
   transform: scale(0.92);
 }
 
-.scorePlus {
-  border-color: var(--win);
-  color: var(--win);
-}
-
-.scoreMinus {
-  color: var(--text-muted);
-}
-
-.scoreValue {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 64px;
-  text-align: center;
+.scoreOptionActive {
+  border-color: var(--accent);
+  background: rgba(245, 180, 12, 0.16);
+  color: var(--accent-strong);
+  font-size: 1.4rem;
 }
 
 .bounceBlock {
@@ -245,12 +234,9 @@
   .vsDivider {
     padding-top: 0;
   }
-  .scoreValue {
-    font-size: 2.4rem;
-  }
-  .scoreBtn {
-    width: 48px;
-    height: 48px;
-    font-size: 1.5rem;
+  .scoreGrid {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 260px;
+    margin-inline: auto;
   }
 }
