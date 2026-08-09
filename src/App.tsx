@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
+import { Achievements } from "./pages/Achievements";
 import { Admin } from "./pages/Admin";
 import { Dashboard } from "./pages/Dashboard";
 import { DoublesTournament } from "./pages/DoublesTournament";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/einzelturnier" element={<SinglesTournament />} />
         <Route path="/doppelturnier" element={<DoublesTournament />} />
         <Route path="/predictions" element={<Predictions />} />
+        <Route path="/achievements" element={<Achievements />} />
         <Route path="/statistiken" element={<Statistics />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>

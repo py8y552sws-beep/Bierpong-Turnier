@@ -1,4 +1,4 @@
-import { ACHIEVEMENT_DEFINITIONS, ACHIEVEMENT_IDS } from "../constants/achievements";
+import { ACHIEVEMENT_DEFINITIONS, ACHIEVEMENT_IDS, CUP_ACHIEVEMENT_THRESHOLDS } from "../constants/achievements";
 import { getPlayerName, PLAYER_IDS } from "../constants/players";
 import type { AchievementId, Match, PlayerId } from "../types";
 import {
@@ -49,17 +49,12 @@ function isAchieved(id: AchievementId, aggregate: PlayerMatchAggregate, matches:
     case "dominance":
       return aggregate.longestWinStreakEver >= 7;
     case "cup_hunter":
-      return aggregate.cups >= 25;
     case "cup_collector":
-      return aggregate.cups >= 50;
     case "cup_machine":
-      return aggregate.cups >= 75;
     case "cup_master":
-      return aggregate.cups >= 100;
     case "cup_legend":
-      return aggregate.cups >= 125;
     case "century_plus":
-      return aggregate.cups >= 150;
+      return aggregate.cups >= CUP_ACHIEVEMENT_THRESHOLDS[id]!;
     case "bounce_master":
       return aggregate.bounceHits >= 1;
     case "island_hopper":
@@ -251,15 +246,6 @@ export function calculateRecentAchievementUnlocks(
   return unlocks.sort((a, b) => b.unlockedAt.localeCompare(a.unlockedAt)).slice(0, limit);
 }
 
-const QUANTIFIABLE_CUP_THRESHOLDS: Partial<Record<AchievementId, number>> = {
-  cup_hunter: 25,
-  cup_collector: 50,
-  cup_machine: 75,
-  cup_master: 100,
-  cup_legend: 125,
-  century_plus: 150,
-};
-
 const QUANTIFIABLE_STREAK_THRESHOLDS: Partial<Record<AchievementId, number>> = {
   heat_check: 3,
   on_fire: 5,
@@ -273,7 +259,7 @@ const QUANTIFIABLE_WIN_STREAK_THRESHOLDS: Partial<Record<AchievementId, number>>
 };
 
 function quantifiableRemaining(id: AchievementId, aggregate: PlayerMatchAggregate): number | null {
-  const cupThreshold = QUANTIFIABLE_CUP_THRESHOLDS[id];
+  const cupThreshold = CUP_ACHIEVEMENT_THRESHOLDS[id];
   if (cupThreshold !== undefined) return Math.max(0, cupThreshold - aggregate.cups);
 
   const streakThreshold = QUANTIFIABLE_STREAK_THRESHOLDS[id];
@@ -286,7 +272,7 @@ function quantifiableRemaining(id: AchievementId, aggregate: PlayerMatchAggregat
 }
 
 function describeRemaining(id: AchievementId, remaining: number): string {
-  if (QUANTIFIABLE_CUP_THRESHOLDS[id] !== undefined) return `noch ${remaining} Cups`;
+  if (CUP_ACHIEVEMENT_THRESHOLDS[id] !== undefined) return `noch ${remaining} Cups`;
   return `noch ${remaining} in Folge`;
 }
 

@@ -193,6 +193,20 @@ export const ACHIEVEMENT_CATEGORY_LABELS: Readonly<Record<AchievementCategory, s
   special: "Besondere Leistungen",
 };
 
+/**
+ * Cup-Schwellenwerte je Cup-Meilenstein-Achievement. Einzige Quelle der
+ * Wahrheit dafür, sowohl für die Freischalt-Bedingung (logic/achievements.ts)
+ * als auch für die Fortschrittsbalken-Anzeige (AchievementGallery).
+ */
+export const CUP_ACHIEVEMENT_THRESHOLDS: Readonly<Partial<Record<AchievementId, number>>> = {
+  cup_hunter: 25,
+  cup_collector: 50,
+  cup_machine: 75,
+  cup_master: 100,
+  cup_legend: 125,
+  century_plus: 150,
+};
+
 /** Gesamtzahl aller Achievements (20). */
 export const TOTAL_ACHIEVEMENT_COUNT = ACHIEVEMENT_IDS.length;
 
