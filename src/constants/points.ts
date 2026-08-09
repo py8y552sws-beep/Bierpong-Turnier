@@ -1,10 +1,4 @@
-import type {
-  ChallengeDefinition,
-  ChallengeId,
-  OneTimeChallengeId,
-  PredictionCategory,
-  RepeatableChallengeId,
-} from "../types";
+import type { PredictionCategory } from "../types";
 
 /** Punktevergabe Einzelturnier nach Endplatzierung (1-8). */
 export const SINGLES_PLACEMENT_POINTS: Readonly<Record<number, number>> = {
@@ -87,44 +81,7 @@ export const PREDICTION_CATEGORY_PICK_COUNT: Readonly<
   mostLosses: 1,
 };
 
-export const REPEATABLE_CHALLENGES: Readonly<
-  Record<RepeatableChallengeId, ChallengeDefinition<RepeatableChallengeId>>
-> = {
-  streak_3: { id: "streak_3", label: "3 Treffer in Folge", points: 2, repeatable: true },
-  streak_5: { id: "streak_5", label: "5 Treffer in Folge", points: 5, repeatable: true },
-  bounce_hit: { id: "bounce_hit", label: "Bounce Treffer", points: 1, repeatable: true },
-};
-
-export const ONE_TIME_CHALLENGES: Readonly<
-  Record<OneTimeChallengeId, ChallengeDefinition<OneTimeChallengeId>>
-> = {
-  shutout: { id: "shutout", label: "Shutout (10:0)", points: 10, repeatable: false },
-  cups_25: { id: "cups_25", label: "25 Cups", points: 5, repeatable: false },
-  cups_50: { id: "cups_50", label: "50 Cups", points: 10, repeatable: false },
-  unbeaten_group: {
-    id: "unbeaten_group",
-    label: "Ungeschlagen Gruppenphase",
-    points: 8,
-    repeatable: false,
-  },
-  no_big_loss: {
-    id: "no_big_loss",
-    label: "Kein Spiel mit mehr als 5 Cups Unterschied verloren",
-    points: 6,
-    repeatable: false,
-  },
-};
-
-export const ALL_CHALLENGES: Readonly<Record<ChallengeId, ChallengeDefinition>> = {
-  ...REPEATABLE_CHALLENGES,
-  ...ONE_TIME_CHALLENGES,
-};
-
-/** Cup-Schwellenwerte, ab denen die jeweilige One-Time-Challenge greift. */
-export const CUPS_25_THRESHOLD = 25;
-export const CUPS_50_THRESHOLD = 50;
-
-/** Mindest-Streak-Längen für die Treffer-in-Folge-Challenges. */
+/** Mindest-Streak-Längen für die Treffer-in-Folge-Statistik (siehe matchAggregates.ts). */
 export const STREAK_3_THRESHOLD = 3;
 export const STREAK_5_THRESHOLD = 5;
 
@@ -132,7 +89,7 @@ export const STREAK_5_THRESHOLD = 5;
 export const SHUTOUT_WINNING_SCORE = 10;
 export const SHUTOUT_LOSING_SCORE = 0;
 
-/** Maximale Cup-Differenz einer Niederlage für die "No Big Loss"-Challenge. */
+/** Maximale Cup-Differenz einer Niederlage für das "Fels in der Brandung"-Achievement. */
 export const MAX_LOSS_MARGIN_FOR_NO_BIG_LOSS = 5;
 
 /**
@@ -148,8 +105,8 @@ export const SINGLES_PLACEMENT_ROUNDS = [
   "seventh_place",
 ] as const;
 
-/** Anzahl Runden-Matches im Doppel-Rundenturnier (4 Teams à je einmal gegeneinander). */
-export const DOUBLES_ROUND_ROBIN_MATCH_COUNT = 6;
+/** Anzahl Runden-Matches im Doppel-Rundenturnier (4 Teams, Hin- und Rückrunde à je einmal gegeneinander). */
+export const DOUBLES_ROUND_ROBIN_MATCH_COUNT = 12;
 
 /** Anzahl Runden-Matches in der Einzel-Vorrunde (8 Spieler, jeder gegen jeden). */
 export const SINGLES_ROUND_ROBIN_MATCH_COUNT = 28;

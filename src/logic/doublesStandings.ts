@@ -14,7 +14,7 @@ export interface DoublesStandingEntry {
 
 /**
  * Abschlusstabelle des Doppelturniers, ausschließlich aus gespielten
- * Rundenspielen (round === "round_robin") berechnet. Einzige Quelle für
+ * Rundenspielen (Hin- und Rückrunde) berechnet. Einzige Quelle für
  * die Doppel-Platzierung (siehe calculateDoublesTeamPlacements).
  */
 export function calculateDoublesStandings(
@@ -26,7 +26,7 @@ export function calculateDoublesStandings(
   );
 
   const roundRobinMatches = getPlayedMatches(matches).filter(
-    (m) => m.matchType === "doubles" && m.round === "round_robin",
+    (m) => m.matchType === "doubles" && (m.round === "round_robin_1" || m.round === "round_robin_2"),
   );
 
   for (const match of roundRobinMatches) {

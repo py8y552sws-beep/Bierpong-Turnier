@@ -1,13 +1,13 @@
 import { getPlayerName, PLAYERS } from "../constants/players";
 import type { DoublesTeam, Match, MatchPlayerStat, PlayerId, Prediction } from "../types";
 import { getSideLabel } from "../utils/matchLabels";
-import { calculateBaseStandingTotals } from "./baseTotals";
 import {
-  calculateChallengeSummaries,
-  calculateMatchChallenges,
-  type MatchChallengeEntry,
-  type PlayerChallengeSummary,
-} from "./challenges";
+  calculateAchievementSummaries,
+  calculateMatchAchievements,
+  type MatchAchievementEntry,
+  type PlayerAchievementSummary,
+} from "./achievements";
+import { calculateBaseStandingTotals } from "./baseTotals";
 import { averageCups, calculatePlayerMatchAggregates, winRate } from "./matchAggregates";
 import { getPlayedMatches, type PlayedMatch } from "./matchStatus";
 import { calculatePredictionResults, type PlayerPredictionResult } from "./predictions";
@@ -20,7 +20,7 @@ export interface PlayerMatchHistoryEntry {
   readonly ownScore: number;
   readonly opponentScore: number;
   readonly ownStat: MatchPlayerStat | undefined;
-  readonly challenges: readonly MatchChallengeEntry[];
+  readonly achievements: readonly MatchAchievementEntry[];
 }
 
 export interface PointsProgressionPoint {
@@ -32,7 +32,7 @@ export interface PlayerProfileStats {
   readonly playerId: PlayerId;
   readonly playerName: string;
   readonly standing: PlayerStandingEntry;
-  readonly challenges: PlayerChallengeSummary;
+  readonly achievements: PlayerAchievementSummary;
   readonly predictionResult: PlayerPredictionResult;
   readonly prediction: Prediction | undefined;
   readonly matchesPlayed: number;
@@ -77,7 +77,7 @@ function buildMatchHistory(
         ownScore,
         opponentScore,
         ownStat: match.playerStats.find((s) => s.playerId === playerId),
-        challenges: calculateMatchChallenges(matches, match.id).filter((c) => c.playerId === playerId),
+        achievements: calculateMatchAchievements(matches, match.id).filter((a) => a.playerId === playerId),
       };
     });
 }
@@ -124,7 +124,7 @@ export function calculatePlayerStats(
   const standing = standings.find((s) => s.playerId === playerId);
   if (!standing) throw new Error(`Keine Gesamtwertung für Spieler ${playerId} gefunden`);
 
-  const challengeSummaries = calculateChallengeSummaries(matches);
+  const achievementSummaries = calculateAchievementSummaries(matches);
   const predictionResults = calculatePredictionResults(matches, teams, predictions);
   const matchHistory = buildMatchHistory(matches, playerId, teams);
   const pointsProgression = buildPointsProgression(
@@ -140,7 +140,7 @@ export function calculatePlayerStats(
     playerId,
     playerName: getPlayerName(playerId),
     standing,
-    challenges: challengeSummaries[playerId],
+    achievements: achievementSummaries[playerId],
     predictionResult: predictionResults[playerId],
     prediction: predictions[playerId],
     matchesPlayed: aggregate.matchesPlayed,

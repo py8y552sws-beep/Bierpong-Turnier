@@ -85,7 +85,7 @@ export function SinglesTournament() {
       <div style={{ height: 20 }} />
 
       <Card title="Vorrunde – Spiele" subtitle={`${groupMatches.length} Spiele, jeder gegen jeden`}>
-        <MatchList matches={groupMatches} emptyMessage="Noch nicht angesetzt." showChallenges />
+        <MatchList matches={groupMatches} emptyMessage="Noch nicht angesetzt." showAchievements />
       </Card>
 
       <div style={{ height: 20 }} />
@@ -96,7 +96,7 @@ export function SinglesTournament() {
             <MatchList
               matches={singlesMatches.filter((m) => m.round === round)}
               emptyMessage="Steht erst nach Abschluss der Vorrunde fest."
-              showChallenges
+              showAchievements
             />
           </Card>
         ))}

@@ -5,6 +5,7 @@ import { DEFAULT_DOUBLES_TEAMS } from "../constants/teams";
 import { isMatchPlayed } from "../logic/matchStatus";
 import {
   deriveNextStageMatches,
+  generateDoublesLeg,
   generateDoublesRoundRobin,
   generateSinglesRoundRobin,
   reshuffleUpcomingMatches,
@@ -124,15 +125,41 @@ export const useTournamentStore = create<TournamentStore>()(
       // bei App-Updates nicht verloren gehen (ein neuer Name würde für
       // bestehende Nutzer:innen sonst wie ein kompletter Reset wirken).
       name: "beerpong-championship-v2",
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => {
-        const state = persistedState as TournamentState;
+        let state = persistedState as TournamentState;
         if (version < 1 && state?.matches) {
           // Migration von v0 (unversioniert): der Spielplan wurde damals in
           // fester statt fairer/zufälliger Reihenfolge erzeugt. Bereits
           // gespielte Matches bleiben unangetastet, nur die noch offenen
           // werden einmalig neu gemischt.
-          return { ...state, matches: reshuffleUpcomingMatches(state.matches) };
+          state = { ...state, matches: reshuffleUpcomingMatches(state.matches) };
+        }
+        if (version < 2 && state?.matches) {
+          // Migration auf v2: das Doppelturnier bekommt eine Rückrunde dazu
+          // (Hin- und Rückrunde statt einer einzelnen Punktrunde). Bereits
+          // gespielte Doppel-Rundenspiele werden nur umbenannt
+          // (round_robin -> round_robin_1) und bleiben inhaltlich
+          // unangetastet; fehlt die Rückrunde noch komplett, wird sie
+          // einmalig als 6 neue, ungespielte Matches ergänzt.
+          const relabeled = state.matches.map((m) =>
+            m.matchType === "doubles" && (m.round as string) === "round_robin"
+              ? { ...m, round: "round_robin_1" as const }
+              : m,
+          );
+          const hasLeg2 = relabeled.some((m) => m.matchType === "doubles" && m.round === "round_robin_2");
+          let matches = relabeled;
+          if (!hasLeg2) {
+            const teams = state.teams?.length === 4 ? state.teams : DEFAULT_DOUBLES_TEAMS;
+            const baseTime = Date.now();
+            const leg2 = generateDoublesLeg(teams, "round_robin_2").map((input, index) => ({
+              ...input,
+              id: generateId("match"),
+              createdAt: new Date(baseTime + index).toISOString(),
+            }));
+            matches = [...relabeled, ...leg2];
+          }
+          state = { ...state, matches };
         }
         return state;
       },

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AchievementToastStack, type AchievementToastEntry } from "../components/common/AchievementToast";
 import { Badge } from "../components/common/Badge";
 import { Button } from "../components/common/Button";
 import { Card } from "../components/common/Card";
@@ -8,8 +9,10 @@ import { PageHeader } from "../components/common/PageHeader";
 import { getPlayerName, PLAYERS } from "../constants/players";
 import { roundLabel } from "../constants/rounds";
 import { useMatches, usePlayerForm, useTeamForm, useTeams, useTournamentActions } from "../hooks/useTournamentData";
+import { calculateMatchAchievements } from "../logic/achievements";
 import { isMatchPlayed } from "../logic/matchStatus";
-import type { Match, MatchSide, PlayerId, TeamId } from "../types";
+import type { Match, MatchInput, MatchSide, PlayerId, TeamId } from "../types";
+import { generateId } from "../utils/id";
 import { getSideLabel } from "../utils/matchLabels";
 import styles from "./ScoreEntry.module.css";
 
@@ -19,23 +22,47 @@ interface Draft {
   readonly bounce: Record<string, number>;
   readonly streak: Record<string, number>;
   readonly cups: Record<string, number>;
+  readonly island: Record<string, number>;
+  readonly bomb: Record<string, number>;
+  readonly trickshot: Record<string, number>;
+  readonly rerack: Record<string, number>;
 }
 
 function buildDraft(match: Match | null): Draft {
-  const draft: Draft = { scoreA: match?.scoreA ?? 0, scoreB: match?.scoreB ?? 0, bounce: {}, streak: {}, cups: {} };
+  const draft: Draft = {
+    scoreA: match?.scoreA ?? 0,
+    scoreB: match?.scoreB ?? 0,
+    bounce: {},
+    streak: {},
+    cups: {},
+    island: {},
+    bomb: {},
+    trickshot: {},
+    rerack: {},
+  };
   if (!match) return draft;
   const players = [...match.sideA.playerIds, ...match.sideB.playerIds];
   const bounce: Record<string, number> = {};
   const streak: Record<string, number> = {};
   const cups: Record<string, number> = {};
+  const island: Record<string, number> = {};
+  const bomb: Record<string, number> = {};
+  const trickshot: Record<string, number> = {};
+  const rerack: Record<string, number> = {};
   for (const id of players) {
     const stat = match.playerStats.find((s) => s.playerId === id);
     bounce[id] = stat?.bounceHits ?? 0;
     streak[id] = stat?.longestStreak ?? 0;
     cups[id] = stat?.cups ?? 0;
+    island[id] = stat?.islandHits ?? 0;
+    bomb[id] = stat?.bombHits ?? 0;
+    trickshot[id] = stat?.trickshotHits ?? 0;
+    rerack[id] = stat?.reRacks ?? 0;
   }
-  return { ...draft, bounce, streak, cups };
+  return { ...draft, bounce, streak, cups, island, bomb, trickshot, rerack };
 }
+
+type StatKind = "bounce" | "streak" | "cups" | "island" | "bomb" | "trickshot" | "rerack";
 
 export function ScoreEntry() {
   const matches = useMatches();
@@ -44,6 +71,7 @@ export function ScoreEntry() {
   const [filter, setFilter] = useState<"open" | "all">("open");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [toasts, setToasts] = useState<readonly AchievementToastEntry[]>([]);
 
   const list = useMemo(() => {
     const base = filter === "open" ? matches.filter((m) => !isMatchPlayed(m)) : matches;
@@ -61,6 +89,10 @@ export function ScoreEntry() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedKey]);
 
+  function dismissToast(toastId: string) {
+    setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+  }
+
   if (!selected) {
     return (
       <>
@@ -76,7 +108,7 @@ export function ScoreEntry() {
     setDraft((d) => ({ ...d, [side === "A" ? "scoreA" : "scoreB"]: value }));
   }
 
-  function adjustStat(kind: "bounce" | "streak" | "cups", playerId: string, delta: number) {
+  function adjustStat(kind: StatKind, playerId: string, delta: number) {
     setDraft((d) => ({
       ...d,
       [kind]: { ...d[kind], [playerId]: Math.max(0, (d[kind][playerId] ?? 0) + delta) },
@@ -99,9 +131,13 @@ export function ScoreEntry() {
           : (draft.cups[id] ?? 0),
       bounceHits: draft.bounce[id] ?? 0,
       longestStreak: draft.streak[id] ?? 0,
+      islandHits: draft.island[id] ?? 0,
+      bombHits: draft.bomb[id] ?? 0,
+      trickshotHits: draft.trickshot[id] ?? 0,
+      reRacks: draft.rerack[id] ?? 0,
     }));
 
-    updateMatch(selected.id, {
+    const input: MatchInput = {
       matchType: selected.matchType,
       round: selected.round,
       sideA: selected.sideA,
@@ -109,7 +145,22 @@ export function ScoreEntry() {
       scoreA: draft.scoreA,
       scoreB: draft.scoreB,
       playerStats,
-    });
+    };
+
+    // Achievement-Freischaltungen werden lokal simuliert, BEVOR der Store
+    // aktualisiert wird: so lässt sich der genaue Unterschied (vorher/
+    // nachher) für dieses eine Match ermitteln, unabhängig davon, wann React
+    // den aktualisierten Store-Zustand tatsächlich neu rendert.
+    const simulatedMatches = matches.map((m) => (m.id === selected.id ? { ...m, ...input } : m));
+    const newlyUnlocked = calculateMatchAchievements(simulatedMatches, selected.id);
+
+    updateMatch(selected.id, input);
+
+    if (newlyUnlocked.length > 0) {
+      const newToasts = newlyUnlocked.map((entry) => ({ ...entry, toastId: generateId("toast") }));
+      setToasts((prev) => [...prev, ...newToasts]);
+    }
+
     setSelectedId(null);
   }
 
@@ -117,6 +168,8 @@ export function ScoreEntry() {
 
   return (
     <>
+      <AchievementToastStack toasts={toasts} onDismiss={dismissToast} />
+
       <PageHeader title="Ergebnis eintragen" subtitle="Endstand auswählen, Bounces zählen, speichern." />
 
       <Card>
@@ -185,7 +238,7 @@ export function ScoreEntry() {
 
         <div style={{ textAlign: "center" }}>
           <button type="button" className={styles.detailsToggle} onClick={() => setShowDetails((v) => !v)}>
-            {showDetails ? "Details ausblenden" : "Details (Cups pro Spieler, Serie) anzeigen"}
+            {showDetails ? "Details ausblenden" : "Details (Cups, Serie, Island, Bombe, Trickshot, Re-Racks) anzeigen"}
           </button>
         </div>
 
@@ -211,7 +264,7 @@ interface SidePanelProps {
   readonly score: number;
   readonly onScoreSelect: (value: number) => void;
   readonly draft: Draft;
-  readonly onStatChange: (kind: "bounce" | "streak" | "cups", playerId: string, delta: number) => void;
+  readonly onStatChange: (kind: StatKind, playerId: string, delta: number) => void;
   readonly isDoubles: boolean;
   readonly showDetails: boolean;
 }
@@ -261,6 +314,22 @@ function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChan
               <div className={styles.playerTally}>
                 <span className={styles.playerTallyName}>Längste Serie</span>
                 <TallyControls value={draft.streak[playerId] ?? 0} onChange={(d) => onStatChange("streak", playerId, d)} />
+              </div>
+              <div className={styles.playerTally}>
+                <span className={styles.playerTallyName}>Island-Treffer</span>
+                <TallyControls value={draft.island[playerId] ?? 0} onChange={(d) => onStatChange("island", playerId, d)} />
+              </div>
+              <div className={styles.playerTally}>
+                <span className={styles.playerTallyName}>Bomben-Treffer</span>
+                <TallyControls value={draft.bomb[playerId] ?? 0} onChange={(d) => onStatChange("bomb", playerId, d)} />
+              </div>
+              <div className={styles.playerTally}>
+                <span className={styles.playerTallyName}>Trickshots</span>
+                <TallyControls value={draft.trickshot[playerId] ?? 0} onChange={(d) => onStatChange("trickshot", playerId, d)} />
+              </div>
+              <div className={styles.playerTally}>
+                <span className={styles.playerTallyName}>Re-Racks</span>
+                <TallyControls value={draft.rerack[playerId] ?? 0} onChange={(d) => onStatChange("rerack", playerId, d)} />
               </div>
             </div>
           ))}

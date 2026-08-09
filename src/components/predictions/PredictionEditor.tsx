@@ -3,7 +3,13 @@ import { Badge } from "../common/Badge";
 import { Card } from "../common/Card";
 import { PLAYERS } from "../../constants/players";
 import { PREDICTION_POINTS_PER_CATEGORY } from "../../constants/points";
-import { usePredictionResults, usePredictions, useTeams, useTournamentActions } from "../../hooks/useTournamentData";
+import {
+  useIsTournamentStarted,
+  usePredictionResults,
+  usePredictions,
+  useTeams,
+  useTournamentActions,
+} from "../../hooks/useTournamentData";
 import { isPredictionComplete } from "../../logic/predictions";
 import { PredictionForm } from "./PredictionForm";
 import styles from "./PredictionEditor.module.css";
@@ -18,6 +24,7 @@ export function PredictionEditor() {
   const predictions = usePredictions();
   const teams = useTeams();
   const results = usePredictionResults();
+  const started = useIsTournamentStarted();
   const { setPrediction } = useTournamentActions();
 
   const currentPrediction = predictions[selectedPlayer];
@@ -52,12 +59,24 @@ export function PredictionEditor() {
       <Card
         title={`Tipps von ${PLAYERS.find((p) => p.id === selectedPlayer)?.name}`}
         subtitle={
-          currentResult.pending
-            ? "Wird automatisch nach Turnierende ausgewertet"
-            : `${currentResult.totalPoints} von ${currentResult.categories.length * PREDICTION_POINTS_PER_CATEGORY} Punkten erzielt`
+          started
+            ? "Turnier läuft bereits – Tipps sind gesperrt"
+            : currentResult.pending
+              ? "Wird automatisch nach Turnierende ausgewertet"
+              : `${currentResult.totalPoints} von ${currentResult.categories.length * PREDICTION_POINTS_PER_CATEGORY} Punkten erzielt`
         }
       >
-        <PredictionForm prediction={currentPrediction} teams={teams} onChange={(next) => setPrediction(next)} />
+        {started && (
+          <p style={{ color: "var(--text-muted)", fontSize: "var(--fs-sm)", marginBottom: 16 }}>
+            Das Turnier hat bereits begonnen. Tipps können ab jetzt nicht mehr geändert werden.
+          </p>
+        )}
+        <PredictionForm
+          prediction={currentPrediction}
+          teams={teams}
+          onChange={(next) => setPrediction(next)}
+          disabled={started}
+        />
       </Card>
     </div>
   );

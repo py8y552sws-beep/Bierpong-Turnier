@@ -103,7 +103,7 @@ export function isDoublesTournamentComplete(
 ): boolean {
   if (teams.length !== 4) return false;
   const playedRoundRobin = getPlayedMatches(matches).filter(
-    (m) => m.matchType === "doubles" && m.round === "round_robin",
+    (m) => m.matchType === "doubles" && (m.round === "round_robin_1" || m.round === "round_robin_2"),
   );
   return playedRoundRobin.length === DOUBLES_ROUND_ROBIN_MATCH_COUNT;
 }

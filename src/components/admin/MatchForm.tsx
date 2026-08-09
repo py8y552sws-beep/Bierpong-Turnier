@@ -18,10 +18,22 @@ interface StatInput {
   cups: string;
   bounceHits: string;
   longestStreak: string;
+  islandHits: string;
+  bombHits: string;
+  trickshotHits: string;
+  reRacks: string;
 }
 
 function emptyStat(): StatInput {
-  return { cups: "", bounceHits: "", longestStreak: "" };
+  return {
+    cups: "",
+    bounceHits: "",
+    longestStreak: "",
+    islandHits: "",
+    bombHits: "",
+    trickshotHits: "",
+    reRacks: "",
+  };
 }
 
 function statFromMatch(match: Match | undefined, playerId: PlayerId): StatInput {
@@ -31,6 +43,10 @@ function statFromMatch(match: Match | undefined, playerId: PlayerId): StatInput 
     cups: String(stat.cups),
     bounceHits: String(stat.bounceHits),
     longestStreak: String(stat.longestStreak),
+    islandHits: String(stat.islandHits ?? 0),
+    bombHits: String(stat.bombHits ?? 0),
+    trickshotHits: String(stat.trickshotHits ?? 0),
+    reRacks: String(stat.reRacks ?? 0),
   };
 }
 
@@ -68,7 +84,7 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
 
   function handleMatchTypeChange(next: MatchType) {
     setMatchType(next);
-    setRound(next === "singles" ? "group" : "round_robin");
+    setRound(next === "singles" ? "group" : "round_robin_1");
   }
 
   const sideAPlayers: PlayerId[] =
@@ -126,6 +142,10 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
               cups: toNonNegativeInt(s.cups),
               bounceHits: toNonNegativeInt(s.bounceHits),
               longestStreak: toNonNegativeInt(s.longestStreak),
+              islandHits: toNonNegativeInt(s.islandHits),
+              bombHits: toNonNegativeInt(s.bombHits),
+              trickshotHits: toNonNegativeInt(s.trickshotHits),
+              reRacks: toNonNegativeInt(s.reRacks),
             };
           })
         : [];
@@ -289,6 +309,60 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
                 value={stats[playerId]?.longestStreak ?? ""}
                 onChange={(e) => updateStat(playerId, "longestStreak", e.target.value)}
               />
+            </div>
+          ))}
+
+          <div className={styles.playerStatRow}>
+            <span />
+            <span className={styles.scoreLabel}>Island</span>
+            <span className={styles.scoreLabel}>Bombe</span>
+            <span className={styles.scoreLabel}>Trickshot</span>
+          </div>
+          {relevantPlayers.map((playerId) => (
+            <div className={styles.playerStatRow} key={`${playerId}-special`}>
+              <span>{getPlayerName(playerId)}</span>
+              <input
+                className={formStyles.input}
+                type="number"
+                min={0}
+                value={stats[playerId]?.islandHits ?? ""}
+                onChange={(e) => updateStat(playerId, "islandHits", e.target.value)}
+              />
+              <input
+                className={formStyles.input}
+                type="number"
+                min={0}
+                value={stats[playerId]?.bombHits ?? ""}
+                onChange={(e) => updateStat(playerId, "bombHits", e.target.value)}
+              />
+              <input
+                className={formStyles.input}
+                type="number"
+                min={0}
+                value={stats[playerId]?.trickshotHits ?? ""}
+                onChange={(e) => updateStat(playerId, "trickshotHits", e.target.value)}
+              />
+            </div>
+          ))}
+
+          <div className={styles.playerStatRow}>
+            <span />
+            <span className={styles.scoreLabel}>Re-Racks</span>
+            <span />
+            <span />
+          </div>
+          {relevantPlayers.map((playerId) => (
+            <div className={styles.playerStatRow} key={`${playerId}-rerack`}>
+              <span>{getPlayerName(playerId)}</span>
+              <input
+                className={formStyles.input}
+                type="number"
+                min={0}
+                value={stats[playerId]?.reRacks ?? ""}
+                onChange={(e) => updateStat(playerId, "reRacks", e.target.value)}
+              />
+              <span />
+              <span />
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { PLAYER_IDS } from "../constants/players";
-import type { DoublesTeam, Match, MatchInput, PlayerId, SinglesRound } from "../types";
+import type { DoublesRound, DoublesTeam, Match, MatchInput, PlayerId, SinglesRound } from "../types";
 import { shuffle } from "../utils/random";
 import { calculateSinglesGroupStandings } from "./groupStandings";
 import { isMatchPlayed, type PlayedMatch } from "./matchStatus";
@@ -44,19 +44,38 @@ function fairRandomPairOrder<T>(items: readonly T[]): Array<readonly [T, T]> {
 
 /**
  * Mischt ausschließlich die noch nicht gespielten Matches neu (zufällige
- * Reihenfolge), ohne bereits erfasste Ergebnisse anzutasten. Einzel- und
- * Doppel-Matches werden getrennt gemischt, Einzel-Vorrunde bleibt dabei
- * immer vor der Doppel-Punktrunde einsortiert. Wird sowohl für die
- * einmalige Migration bestehender Turniere als auch für die manuelle
- * "Spielplan neu mischen"-Aktion im Adminbereich verwendet.
+ * Reihenfolge), ohne bereits erfasste Ergebnisse anzutasten. Es wird
+ * getrennt nach Phase gemischt (Einzel-Vorrunde, Einzel-K.O., Doppel-
+ * Hinrunde, Doppel-Rückrunde) und in genau dieser Reihenfolge wieder
+ * zusammengesetzt, damit z.B. die Rückrunde nie vor der Hinrunde einsortiert
+ * wird. Wird sowohl für die einmalige Migration bestehender Turniere als
+ * auch für die manuelle "Spielplan neu mischen"-Aktion im Adminbereich
+ * verwendet.
  */
 export function reshuffleUpcomingMatches(matches: readonly Match[]): Match[] {
   const played = matches.filter(isMatchPlayed);
-  const upcomingSingles = shuffle(matches.filter((m) => !isMatchPlayed(m) && m.matchType === "singles"));
-  const upcomingDoubles = shuffle(matches.filter((m) => !isMatchPlayed(m) && m.matchType === "doubles"));
+  const isUpcoming = (m: Match) => !isMatchPlayed(m);
+
+  const upcomingSinglesGroup = shuffle(
+    matches.filter((m) => isUpcoming(m) && m.matchType === "singles" && m.round === "group"),
+  );
+  const upcomingSinglesKnockout = shuffle(
+    matches.filter((m) => isUpcoming(m) && m.matchType === "singles" && m.round !== "group"),
+  );
+  const upcomingDoublesLeg1 = shuffle(
+    matches.filter((m) => isUpcoming(m) && m.matchType === "doubles" && m.round === "round_robin_1"),
+  );
+  const upcomingDoublesLeg2 = shuffle(
+    matches.filter((m) => isUpcoming(m) && m.matchType === "doubles" && m.round === "round_robin_2"),
+  );
 
   const baseTime = Date.now();
-  const reordered = [...upcomingSingles, ...upcomingDoubles].map((m, index) => ({
+  const reordered = [
+    ...upcomingSinglesGroup,
+    ...upcomingSinglesKnockout,
+    ...upcomingDoublesLeg1,
+    ...upcomingDoublesLeg2,
+  ].map((m, index) => ({
     ...m,
     createdAt: new Date(baseTime + index).toISOString(),
   }));
@@ -75,12 +94,23 @@ export function generateSinglesRoundRobin(): MatchInput[] {
 }
 
 /**
+ * Generiert eine einzelne Doppel-Runde (Hin- oder Rückrunde): jedes der 4
+ * Teams spielt einmal gegen jedes andere Team (6 Matches), alle zunächst
+ * ohne Ergebnis. Zufällig, aber gleichmäßig auf Wartezeiten verteilt. Wird
+ * auch von der Store-Migration verwendet, um bei bestehenden Turnieren
+ * nachträglich nur die fehlende Rückrunde zu ergänzen.
+ */
+export function generateDoublesLeg(teams: readonly DoublesTeam[], round: DoublesRound): MatchInput[] {
+  return fairRandomPairOrder(teams).map(([a, b]) => doublesMatchInput(a, b, round));
+}
+
+/**
  * Generiert die vollständige Doppel-Punktrunde: jedes der 4 Teams spielt
- * einmal gegen jedes andere Team (6 Matches), alle zunächst ohne Ergebnis.
- * Ebenfalls zufällig, aber gleichmäßig auf Wartezeiten verteilt.
+ * zweimal gegen jedes andere Team (Hin- und Rückrunde, 12 Matches
+ * insgesamt), alle zunächst ohne Ergebnis.
  */
 export function generateDoublesRoundRobin(teams: readonly DoublesTeam[]): MatchInput[] {
-  return fairRandomPairOrder(teams).map(([a, b]) => doublesMatchInput(a, b));
+  return [...generateDoublesLeg(teams, "round_robin_1"), ...generateDoublesLeg(teams, "round_robin_2")];
 }
 
 function singlesMatchInput(round: SinglesRound, a: PlayerId, b: PlayerId): MatchInput {
@@ -95,10 +125,10 @@ function singlesMatchInput(round: SinglesRound, a: PlayerId, b: PlayerId): Match
   };
 }
 
-function doublesMatchInput(teamA: DoublesTeam, teamB: DoublesTeam): MatchInput {
+function doublesMatchInput(teamA: DoublesTeam, teamB: DoublesTeam, round: DoublesRound): MatchInput {
   return {
     matchType: "doubles",
-    round: "round_robin",
+    round,
     sideA: { playerIds: [...teamA.playerIds], teamId: teamA.id },
     sideB: { playerIds: [...teamB.playerIds], teamId: teamB.id },
     scoreA: null,

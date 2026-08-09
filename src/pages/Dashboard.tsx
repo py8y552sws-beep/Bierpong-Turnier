@@ -10,17 +10,18 @@ import tableStyles from "../components/common/table.module.css";
 import { LEADERBOARD_LABELS } from "../logic/leaderboards";
 import { roundLabel } from "../constants/rounds";
 import {
-  useChallengeSummaries,
+  useAchievementSummaries,
   useLeaderboard,
   useMatches,
+  useNextAchievementCandidates,
   useNextMatch,
   useOverallStandings,
   usePredictionResults,
+  useRecentAchievementUnlocks,
   useRecentMatches,
   useTeams,
   useTournamentStatus,
 } from "../hooks/useTournamentData";
-import { ONE_TIME_CHALLENGES } from "../constants/points";
 import { getPlayerName } from "../constants/players";
 import { getPlayedMatches } from "../logic/matchStatus";
 import { getMatchTitle } from "../utils/matchLabels";
@@ -38,16 +39,24 @@ export function Dashboard() {
   const topCups = useLeaderboard("cups").slice(0, 5);
   const topWins = useLeaderboard("wins").slice(0, 5);
   const topBounce = useLeaderboard("bounceHits").slice(0, 5);
-  const challengeSummaries = useChallengeSummaries();
+  const achievementSummaries = useAchievementSummaries();
+  const recentAchievementUnlocks = useRecentAchievementUnlocks(5);
+  const nextAchievementCandidates = useNextAchievementCandidates(3);
 
   const predictionLeaderboard = Object.values(predictionResults)
     .slice()
     .sort((a, b) => b.totalPoints - a.totalPoints)
     .slice(0, 5);
 
-  const openOneTimeChallenges = Object.values(ONE_TIME_CHALLENGES).filter(
-    (def) => !Object.values(challengeSummaries).some((s) => s.oneTime.some((c) => c.id === def.id && c.achieved)),
-  );
+  const mostAchievements = Object.values(achievementSummaries)
+    .slice()
+    .sort((a, b) => b.unlockedCount - a.unlockedCount)
+    .slice(0, 5);
+
+  const mostAchievementPoints = Object.values(achievementSummaries)
+    .slice()
+    .sort((a, b) => b.totalPoints - a.totalPoints)
+    .slice(0, 5);
 
   const leader = standings[0];
 
@@ -72,7 +81,7 @@ export function Dashboard() {
 
       <div className={styles.grid}>
         <div className={styles.stack}>
-          <Card title="Gesamtwertung" subtitle="Einzel + Doppel + Predictions + Side Challenges" actions={<Link to="/statistiken">Alle Statistiken →</Link>}>
+          <Card title="Gesamtwertung" subtitle="Einzel + Doppel + Predictions + Achievements" actions={<Link to="/statistiken">Alle Statistiken →</Link>}>
             {standings.every((s) => s.totalPoints === 0) ? (
               <EmptyState message="Noch keine Punkte vergeben – lege im Adminbereich Matches an." />
             ) : (
@@ -87,7 +96,7 @@ export function Dashboard() {
                     <th className={tableStyles.num}>Einzel</th>
                     <th className={tableStyles.num}>Doppel</th>
                     <th className={tableStyles.num}>Predict.</th>
-                    <th className={tableStyles.num}>Challenges</th>
+                    <th className={tableStyles.num}>Achievements</th>
                     <th className={tableStyles.num}>Gesamt</th>
                   </tr>
                 </thead>
@@ -103,7 +112,7 @@ export function Dashboard() {
                       <td className={tableStyles.num}>{entry.singlesPoints}</td>
                       <td className={tableStyles.num}>{entry.doublesPoints}</td>
                       <td className={tableStyles.num}>{entry.predictionPoints}</td>
-                      <td className={tableStyles.num}>{entry.challengePoints}</td>
+                      <td className={tableStyles.num}>{entry.achievementPoints}</td>
                       <td className={tableStyles.num}>
                         <strong>{entry.totalPoints}</strong>
                       </td>
@@ -185,13 +194,70 @@ export function Dashboard() {
             <MiniLeaderboard entries={topBounce} suffix="Treffer" />
           </Card>
 
-          <Card title="Offene Side Challenges" subtitle="Noch von niemandem freigeschaltet">
-            {openOneTimeChallenges.length === 0 ? (
-              <EmptyState message="Alle einmaligen Challenges wurden bereits erreicht." />
+          <Card title="Zuletzt freigeschaltete Achievements" subtitle="Über alle Spieler hinweg">
+            {recentAchievementUnlocks.length === 0 ? (
+              <EmptyState message="Noch keine Achievements freigeschaltet." />
             ) : (
-              openOneTimeChallenges.map((c) => (
-                <div className={styles.challengeChip} key={c.id}>
-                  <span>{c.label}</span>
+              recentAchievementUnlocks.map((u, i) => (
+                <div className={styles.challengeChip} key={`${u.playerId}-${u.achievementId}-${i}`}>
+                  <span>
+                    {u.icon} {getPlayerName(u.playerId)} · {u.name}
+                  </span>
+                  <Badge variant="win">+{u.points}</Badge>
+                </div>
+              ))
+            )}
+          </Card>
+
+          <Card title="Meiste Achievements">
+            {mostAchievements.every((s) => s.unlockedCount === 0) ? (
+              <EmptyState message="Noch keine Daten." />
+            ) : (
+              <div className={styles.miniList}>
+                {mostAchievements.map((s, i) => (
+                  <div className={styles.miniRow} key={s.playerId}>
+                    <span>
+                      <span className={styles.miniRank}>{i + 1}.</span>
+                      <Link className={tableStyles.playerLink} to={`/spieler/${s.playerId}`}>
+                        {getPlayerName(s.playerId)}
+                      </Link>
+                    </span>
+                    <span className={styles.miniValue}>{s.unlockedCount} Achievements</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card title="Meiste Achievement-Punkte">
+            {mostAchievementPoints.every((s) => s.totalPoints === 0) ? (
+              <EmptyState message="Noch keine Daten." />
+            ) : (
+              <div className={styles.miniList}>
+                {mostAchievementPoints.map((s, i) => (
+                  <div className={styles.miniRow} key={s.playerId}>
+                    <span>
+                      <span className={styles.miniRank}>{i + 1}.</span>
+                      <Link className={tableStyles.playerLink} to={`/spieler/${s.playerId}`}>
+                        {getPlayerName(s.playerId)}
+                      </Link>
+                    </span>
+                    <span className={styles.miniValue}>{s.totalPoints} P</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card title="Nächstes erreichbares Achievement">
+            {nextAchievementCandidates.length === 0 ? (
+              <EmptyState message="Alle quantifizierbaren Achievements sind bereits freigeschaltet." />
+            ) : (
+              nextAchievementCandidates.map((c, i) => (
+                <div className={styles.challengeChip} key={`${c.playerId}-${c.achievementId}-${i}`}>
+                  <span>
+                    {c.icon} {getPlayerName(c.playerId)} · {c.name} ({c.progressLabel})
+                  </span>
                   <Badge variant="accent">+{c.points}</Badge>
                 </div>
               ))
