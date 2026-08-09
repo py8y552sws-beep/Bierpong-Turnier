@@ -1,0 +1,123 @@
+.achievementProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.progressRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.progressBar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-elevated-2);
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.achievementCategory {
+  margin-top: 16px;
+}
+
+.achievementCategoryTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.achievementGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.achievementCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated-2);
+  border: 1px solid transparent;
+}
+
+.achievementUnlocked {
+  border-color: var(--accent);
+}
+
+.achievementLocked {
+  opacity: 0.5;
+}
+
+.achievementIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.achievementInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.achievementName {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.achievementDesc {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.achievementDate {
+  font-size: var(--fs-xs);
+  color: var(--accent-strong);
+}
+
+.cupProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cupProgressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+
+.cupProgressBarFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.cupProgressLabel {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

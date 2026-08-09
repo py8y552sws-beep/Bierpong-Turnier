@@ -6,6 +6,7 @@ import {
   IconClipboard,
   IconDashboard,
   IconDoubles,
+  IconStreak,
   IconTrophy,
   IconUsers,
 } from "../common/icons";
@@ -24,6 +25,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   { to: "/einzelturnier", label: "Einzelturnier", icon: IconTrophy },
   { to: "/doppelturnier", label: "Doppelturnier", icon: IconDoubles },
   { to: "/predictions", label: "Predictions", icon: IconClipboard },
+  { to: "/achievements", label: "Achievements", icon: IconStreak },
   { to: "/statistiken", label: "Statistiken", icon: IconChart },
 ];
 

@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { Navigate, useParams } from "react-router-dom";
+import { AchievementGallery } from "../components/achievements/AchievementGallery";
 import { Badge } from "../components/common/Badge";
 import { Card } from "../components/common/Card";
 import { EmptyState } from "../components/common/EmptyState";
@@ -7,7 +8,7 @@ import { PageHeader } from "../components/common/PageHeader";
 import { StatTile } from "../components/common/StatTile";
 import tableStyles from "../components/common/table.module.css";
 import { PointsProgressionChart } from "../components/charts/PointsProgressionChart";
-import { ACHIEVEMENT_CATEGORY_LABELS, ACHIEVEMENT_CATEGORY_ORDER, MAX_ACHIEVEMENT_POINTS, TOTAL_ACHIEVEMENT_COUNT } from "../constants/achievements";
+import { TOTAL_ACHIEVEMENT_COUNT } from "../constants/achievements";
 import { isPlayerId } from "../constants/players";
 import { PREDICTION_CATEGORIES, PREDICTION_CATEGORY_LABELS } from "../constants/points";
 import { roundLabel } from "../constants/rounds";
@@ -126,62 +127,9 @@ function PlayerProfileContent({ playerId }: { playerId: import("../types").Playe
         <div className={styles.stack}>
           <Card
             title="Achievements"
-            subtitle={`${stats.achievements.unlockedCount}/${TOTAL_ACHIEVEMENT_COUNT} freigeschaltet · ${stats.achievements.totalPoints}/${MAX_ACHIEVEMENT_POINTS} Punkte`}
+            subtitle={`${stats.achievements.unlockedCount}/${TOTAL_ACHIEVEMENT_COUNT} freigeschaltet · siehe auch die vollständige Achievements-Seite`}
           >
-            <div className={styles.achievementProgress}>
-              <div className={styles.progressRow}>
-                <span>Freigeschaltet</span>
-                <span>
-                  {stats.achievements.unlockedCount}/{TOTAL_ACHIEVEMENT_COUNT}
-                </span>
-              </div>
-              <div className={styles.progressBar}>
-                <div
-                  className={styles.progressBarFill}
-                  style={{ width: `${(stats.achievements.unlockedCount / TOTAL_ACHIEVEMENT_COUNT) * 100}%` }}
-                />
-              </div>
-              <div className={styles.progressRow}>
-                <span>Achievement Points</span>
-                <span>
-                  {stats.achievements.totalPoints}/{MAX_ACHIEVEMENT_POINTS}
-                </span>
-              </div>
-              <div className={styles.progressBar}>
-                <div
-                  className={styles.progressBarFill}
-                  style={{ width: `${(stats.achievements.totalPoints / MAX_ACHIEVEMENT_POINTS) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {ACHIEVEMENT_CATEGORY_ORDER.map((category) => (
-              <div key={category} className={styles.achievementCategory}>
-                <h4 className={styles.achievementCategoryTitle}>{ACHIEVEMENT_CATEGORY_LABELS[category]}</h4>
-                <div className={styles.achievementGrid}>
-                  {stats.achievements.achievements
-                    .filter((a) => a.category === category)
-                    .map((a) => (
-                      <div
-                        key={a.id}
-                        className={`${styles.achievementCard} ${a.unlocked ? styles.achievementUnlocked : styles.achievementLocked}`}
-                      >
-                        <span className={styles.achievementIcon}>{a.unlocked ? a.icon : "🔒"}</span>
-                        <div className={styles.achievementInfo}>
-                          <span className={styles.achievementName}>{a.name}</span>
-                          <span className={styles.achievementDesc}>{a.description}</span>
-                          {a.unlocked && a.unlockedAt && (
-                            <span className={styles.achievementDate}>
-                              Freigeschaltet: {new Date(a.unlockedAt).toLocaleDateString("de-DE")}
-                            </span>
-                          )}
-                        </div>
-                        <Badge variant={a.unlocked ? "win" : "neutral"}>+{a.points}</Badge>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
+            <AchievementGallery summary={stats.achievements} cups={stats.cups} />
           </Card>
 
           <Card title="Predictions" subtitle={stats.predictionResult.pending ? "Wird nach Turnierende ausgewertet" : "Ausgewertet"}>
