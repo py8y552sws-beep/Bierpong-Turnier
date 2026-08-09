@@ -3,7 +3,7 @@ import type { DoublesTeam, Match } from "../../types";
 import { getPlayerName } from "../../constants/players";
 import { isMatchPlayed } from "../../logic/matchStatus";
 import { roundLabel } from "../../constants/rounds";
-import { useMatchChallenges } from "../../hooks/useTournamentData";
+import { useMatchAchievements } from "../../hooks/useTournamentData";
 import { getSideLabel } from "../../utils/matchLabels";
 import { Badge } from "./Badge";
 import { EmptyState } from "./EmptyState";
@@ -14,7 +14,7 @@ interface MatchListProps {
   readonly teams?: readonly DoublesTeam[];
   readonly emptyMessage?: string;
   readonly showRound?: boolean;
-  readonly showChallenges?: boolean;
+  readonly showAchievements?: boolean;
   readonly renderActions?: (match: Match) => ReactNode;
 }
 
@@ -23,7 +23,7 @@ export function MatchList({
   teams = [],
   emptyMessage = "Keine Matches.",
   showRound = false,
-  showChallenges = false,
+  showAchievements = false,
   renderActions,
 }: MatchListProps) {
   if (matches.length === 0) return <EmptyState message={emptyMessage} />;
@@ -36,7 +36,7 @@ export function MatchList({
           match={match}
           teams={teams}
           showRound={showRound}
-          showChallenges={showChallenges}
+          showAchievements={showAchievements}
           renderActions={renderActions}
         />
       ))}
@@ -48,18 +48,18 @@ function MatchRow({
   match,
   teams,
   showRound,
-  showChallenges,
+  showAchievements,
   renderActions,
 }: {
   match: Match;
   teams: readonly DoublesTeam[];
   showRound: boolean;
-  showChallenges: boolean;
+  showAchievements: boolean;
   renderActions?: (match: Match) => ReactNode;
 }) {
   const played = isMatchPlayed(match);
   const winnerClass = played ? (match.scoreA > match.scoreB ? styles.winnerA : styles.winnerB) : "";
-  const challenges = useMatchChallenges(showChallenges ? match.id : "");
+  const achievements = useMatchAchievements(showAchievements ? match.id : "");
 
   return (
     <div className={`${styles.row} ${winnerClass}`}>
@@ -76,11 +76,11 @@ function MatchRow({
         {showRound && <span className={styles.pending}>{roundLabel(match.matchType, match.round)}</span>}
         {renderActions?.(match)}
       </span>
-      {showChallenges && challenges.length > 0 && (
+      {showAchievements && achievements.length > 0 && (
         <div className={styles.challengeRow}>
-          {challenges.map((c, i) => (
+          {achievements.map((a, i) => (
             <Badge key={i} variant="accent">
-              {getPlayerName(c.playerId)}: {c.label} +{c.points}
+              {getPlayerName(a.playerId)}: {a.icon} {a.name} +{a.points}
             </Badge>
           ))}
         </div>

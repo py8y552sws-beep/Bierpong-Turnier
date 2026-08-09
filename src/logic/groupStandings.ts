@@ -15,7 +15,7 @@ export interface GroupStandingEntry {
 /**
  * Tabelle der Einzel-Gruppenphase, ausschließlich aus Matches mit
  * round === "group" berechnet. Dient der Anzeige und als Grundlage der
- * "Ungeschlagen Gruppenphase"-Challenge-Anzeige im Turnierüberblick.
+ * "Unbeatable"-Achievement-Anzeige im Turnierüberblick.
  */
 export function calculateSinglesGroupStandings(
   matches: readonly Match[],

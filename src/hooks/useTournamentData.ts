@@ -1,12 +1,17 @@
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { PLAYERS } from "../constants/players";
-import { calculateChallengeSummaries, calculateMatchChallenges } from "../logic/challenges";
+import {
+  calculateAchievementSummaries,
+  calculateMatchAchievements,
+  calculateNextAchievementCandidates,
+  calculateRecentAchievementUnlocks,
+} from "../logic/achievements";
 import { calculateDoublesStandings } from "../logic/doublesStandings";
 import { calculatePlayerForm, calculateTeamForm } from "../logic/form";
 import { calculateSinglesGroupStandings } from "../logic/groupStandings";
 import { calculateAllLeaderboards, calculateLeaderboard, type LeaderboardMetric } from "../logic/leaderboards";
-import { getNextUpcomingMatch, getRecentPlayedMatches } from "../logic/matchStatus";
+import { getNextUpcomingMatch, getRecentPlayedMatches, isMatchPlayed } from "../logic/matchStatus";
 import {
   calculateDoublesTeamPlacements,
   calculateSinglesPlacements,
@@ -95,9 +100,30 @@ export function useAllLeaderboards() {
   return useMemo(() => calculateAllLeaderboards(matches), [matches]);
 }
 
-export function useChallengeSummaries() {
+export function useAchievementSummaries() {
   const matches = useMatches();
-  return useMemo(() => calculateChallengeSummaries(matches), [matches]);
+  return useMemo(() => calculateAchievementSummaries(matches), [matches]);
+}
+
+export function useMatchAchievements(matchId: string) {
+  const matches = useMatches();
+  return useMemo(() => calculateMatchAchievements(matches, matchId), [matches, matchId]);
+}
+
+export function useRecentAchievementUnlocks(limit: number) {
+  const matches = useMatches();
+  return useMemo(() => calculateRecentAchievementUnlocks(matches, limit), [matches, limit]);
+}
+
+export function useNextAchievementCandidates(limit: number) {
+  const matches = useMatches();
+  return useMemo(() => calculateNextAchievementCandidates(matches, limit), [matches, limit]);
+}
+
+/** True, sobald mindestens ein Match gespielt wurde – sperrt ab dann alle Predictions. */
+export function useIsTournamentStarted() {
+  const matches = useMatches();
+  return useMemo(() => matches.some((m) => isMatchPlayed(m)), [matches]);
 }
 
 export function usePredictionResults() {
@@ -151,11 +177,6 @@ export function useDoublesPlacements() {
   const matches = useMatches();
   const teams = useTeams();
   return useMemo(() => calculateDoublesTeamPlacements(matches, teams), [matches, teams]);
-}
-
-export function useMatchChallenges(matchId: string) {
-  const matches = useMatches();
-  return useMemo(() => calculateMatchChallenges(matches, matchId), [matches, matchId]);
 }
 
 export function usePlayerForm(playerId: PlayerId, limit?: number) {

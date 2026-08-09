@@ -99,7 +99,7 @@ function playerAtRank(
 /**
  * Ermittelt die tatsächlichen Antworten aller Prediction-Kategorien aus den
  * Matchdaten. "Gewinner/Letzter Platz Gesamtwertung" beziehen sich bewusst
- * auf die Basis-Gesamtwertung (Einzel + Doppel + Challenges, ohne
+ * auf die Basis-Gesamtwertung (Einzel + Doppel + Achievements, ohne
  * Prediction-Punkte), um einen Zirkelbezug zu vermeiden – Predictions werden
  * erst nach Turnierende (also nach Feststehen aller anderen Punkte)
  * ausgewertet.

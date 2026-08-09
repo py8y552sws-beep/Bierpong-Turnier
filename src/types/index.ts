@@ -49,11 +49,11 @@ export type SinglesRound =
   | "seventh_place";
 
 /**
- * Das Doppelturnier besteht ausschließlich aus einer Punktrunde (jedes
- * Team spielt einmal gegen jedes andere); die Endplatzierung ergibt sich
+ * Das Doppelturnier besteht aus einer Hin- und einer Rückrunde (jedes Team
+ * spielt zweimal gegen jedes andere); die Endplatzierung ergibt sich
  * automatisch aus der Abschlusstabelle, es gibt keine K.O.-Phase.
  */
-export type DoublesRound = "round_robin";
+export type DoublesRound = "round_robin_1" | "round_robin_2";
 
 export type MatchRound = SinglesRound | DoublesRound;
 
@@ -70,6 +70,11 @@ export interface MatchPlayerStat {
   readonly cups: number;
   readonly bounceHits: number;
   readonly longestStreak: number;
+  readonly islandHits: number;
+  readonly bombHits: number;
+  readonly trickshotHits: number;
+  /** Anzahl der Umstellungen/Re-Racks während des Spiels. */
+  readonly reRacks: number;
 }
 
 /**
@@ -131,22 +136,40 @@ export type PredictionCategory =
   | "mostWins"
   | "mostLosses";
 
-export type RepeatableChallengeId = "streak_3" | "streak_5" | "bounce_hit";
+/** Die fünf Achievement-Kategorien, in die alle 20 Achievements gruppiert sind. */
+export type AchievementCategory = "streak" | "win_streak" | "cups" | "special_shot" | "special";
 
-export type OneTimeChallengeId =
+/** Alle 20 fest definierten Achievements, jeweils höchstens einmal pro Spieler freischaltbar. */
+export type AchievementId =
+  | "heat_check"
+  | "on_fire"
+  | "unstoppable"
+  | "hot_streak"
+  | "winning_machine"
+  | "dominance"
+  | "cup_hunter"
+  | "cup_collector"
+  | "cup_machine"
+  | "cup_master"
+  | "cup_legend"
+  | "century_plus"
+  | "bounce_master"
+  | "island_hopper"
+  | "bomb_squad"
+  | "trickshot_artist"
+  | "no_rerack_needed"
   | "shutout"
-  | "cups_25"
-  | "cups_50"
-  | "unbeaten_group"
-  | "no_big_loss";
+  | "unbeatable"
+  | "rock_solid";
 
-export type ChallengeId = RepeatableChallengeId | OneTimeChallengeId;
-
-export interface ChallengeDefinition<T extends ChallengeId = ChallengeId> {
-  readonly id: T;
-  readonly label: string;
+/** Zentrale, unveränderliche Definition eines Achievements (siehe constants/achievements.ts). */
+export interface AchievementDefinition {
+  readonly id: AchievementId;
+  readonly name: string;
+  readonly description: string;
+  readonly category: AchievementCategory;
   readonly points: number;
-  readonly repeatable: boolean;
+  readonly icon: string;
 }
 
 /** Die komplette persistierte Rohdatenbasis der Anwendung. */

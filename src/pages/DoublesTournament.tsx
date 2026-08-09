@@ -31,7 +31,7 @@ export function DoublesTournament() {
     <>
       <PageHeader
         title="Doppelturnier"
-        subtitle="4 Teams · Jeder gegen Jeden, die Endplatzierung ergibt sich aus der Abschlusstabelle."
+        subtitle="4 Teams · Hin- und Rückrunde (12 Spiele, 6 pro Spieler), die Endplatzierung ergibt sich aus der Abschlusstabelle."
       />
 
       {championTeam && (
@@ -91,8 +91,8 @@ export function DoublesTournament() {
 
       <div style={{ height: 20 }} />
 
-      <Card title="Rundenspiele">
-        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." showChallenges />
+      <Card title="Rundenspiele" subtitle="Hinrunde und Rückrunde, je 6 Spiele">
+        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." showRound showAchievements />
       </Card>
 
       <div style={{ height: 20 }} />
