@@ -55,7 +55,9 @@ function buildDraft(match: Match | null): Draft {
   for (const id of players) {
     const stat = match.playerStats.find((s) => s.playerId === id);
     bounce[id] = stat?.bounceHits ?? 0;
-    streak[id] = stat?.longestStreak ?? 0;
+    // Default 1: wer mindestens einen Becher trifft, hat automatisch schon
+    // eine Serie von 1 – 0 wäre nur bei komplett fehlendem Treffer korrekt.
+    streak[id] = stat?.longestStreak ?? 1;
     cups[id] = stat?.cups ?? 0;
     island[id] = stat?.islandHits ?? 0;
     bomb[id] = stat?.bombHits ?? 0;
@@ -152,7 +154,7 @@ export function ScoreEntry() {
             : scoreB
           : (draft.cups[id] ?? 0),
       bounceHits: draft.bounce[id] ?? 0,
-      longestStreak: draft.streak[id] ?? 0,
+      longestStreak: draft.streak[id] ?? 1,
       islandHits: draft.island[id] ?? 0,
       bombHits: draft.bomb[id] ?? 0,
       trickshotHits: draft.trickshot[id] ?? 0,
