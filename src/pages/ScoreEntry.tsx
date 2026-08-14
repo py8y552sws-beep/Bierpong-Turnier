@@ -141,7 +141,10 @@ export function ScoreEntry() {
   const scoreA = selected ? effectiveScore(selected, "A", draft) : 0;
   const scoreB = selected ? effectiveScore(selected, "B", draft) : 0;
   const tie = scoreA === scoreB;
-  const canSave = selected !== null && !tie;
+  // Ein Beer-Pong-Spiel endet erst, wenn eine Seite alle 10 Becher getroffen
+  // hat – Endstände wie 9:8 oder 7:5 sind daher nie ein gültiges Endergebnis.
+  const reachesTen = Math.max(scoreA, scoreB) === 10;
+  const canSave = selected !== null && !tie && reachesTen;
 
   // Spezialwürfe/„Ohne Umstellen", die ein Spieler bereits an anderer
   // Stelle erreicht hat, werden hier gar nicht mehr als Eingabeoption
@@ -314,7 +317,11 @@ export function ScoreEntry() {
 
           <div className={styles.saveBar}>
             <span className={styles.saveHint}>
-              {tie ? "Unentschieden ist nicht möglich – Ergebnisse müssen sich unterscheiden." : "Bereit zum Speichern."}
+              {tie
+                ? "Unentschieden ist nicht möglich – Ergebnisse müssen sich unterscheiden."
+                : !reachesTen
+                  ? "Eine Seite muss genau 10 Cups getroffen haben, um das Spiel abzuschließen."
+                  : "Bereit zum Speichern."}
             </span>
             <Button variant="primary" onClick={handleSave} disabled={!canSave}>
               Ergebnis speichern

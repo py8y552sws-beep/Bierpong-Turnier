@@ -8,6 +8,7 @@ import {
   generateDoublesLeg,
   generateDoublesRoundRobin,
   generateSinglesRoundRobin,
+  reconcileDerivedMatches,
   reshuffleUpcomingMatches,
 } from "../logic/scheduleGenerator";
 import type {
@@ -65,10 +66,16 @@ function buildInitialState(teams: readonly DoublesTeam[]): TournamentState {
   };
 }
 
-/** Hängt automatisch ableitbare Folge-Matches (K.O.-Runden) an, sofern welche entstanden sind. */
+/**
+ * Bringt den K.O.-Baum nach jeder Ergebniseingabe auf den korrekten Stand:
+ * korrigiert zuerst bereits abgeleitete Folge-Matches, falls sich Sieger/
+ * Verlierer einer Vorstufe nachträglich geändert haben, und hängt danach
+ * neu ableitbare Folge-Matches an, sofern welche entstanden sind.
+ */
 function withAutoAdvance(matches: readonly Match[]): Match[] {
-  const derived = deriveNextStageMatches(matches).map(materialize);
-  return derived.length > 0 ? [...matches, ...derived] : [...matches];
+  const reconciled = reconcileDerivedMatches(matches);
+  const derived = deriveNextStageMatches(reconciled).map(materialize);
+  return derived.length > 0 ? [...reconciled, ...derived] : [...reconciled];
 }
 
 export const useTournamentStore = create<TournamentStore>()(
