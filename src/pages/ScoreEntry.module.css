@@ -105,6 +105,31 @@
   font-size: 1.4rem;
 }
 
+.cupsBlock {
+  margin-top: 6px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.computedScore {
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line-strong);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.computedScoreValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent-strong);
+}
+
 .bounceBlock {
   margin-top: 14px;
   width: 100%;
@@ -202,6 +227,18 @@
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--text-muted);
+}
+
+.rerackCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  font-size: var(--fs-sm);
+  font-weight: 600;
 }
 
 .saveBar {

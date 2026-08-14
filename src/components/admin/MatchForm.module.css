@@ -50,3 +50,13 @@
   text-align: center;
   color: var(--text-faint);
 }
+
+.rerackCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  grid-column: span 3;
+  padding-bottom: 9px;
+}
