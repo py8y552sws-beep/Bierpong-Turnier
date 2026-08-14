@@ -1,0 +1,52 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+}
+
+.label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggle {
+  display: flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+}
+
+.toggleBtn {
+  min-width: 52px;
+  padding: 7px 12px;
+  background: var(--bg-elevated-2);
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  touch-action: manipulation;
+}
+
+.toggleBtn:first-child {
+  border-right: 1px solid var(--line-strong);
+}
+
+.toggleBtnActive {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.toggleBtnActiveYes {
+  background: rgba(245, 180, 12, 0.16);
+  color: var(--accent-strong);
+}

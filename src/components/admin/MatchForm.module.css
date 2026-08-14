@@ -33,7 +33,7 @@
 
 .playerStatRow {
   display: grid;
-  grid-template-columns: 1fr 90px 90px 90px;
+  grid-template-columns: 1fr 90px 90px;
   gap: 10px;
   align-items: end;
   margin-bottom: 10px;
@@ -51,12 +51,22 @@
   color: var(--text-faint);
 }
 
-.rerackCheckbox {
+.togglesBlock {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--line-strong);
+}
+
+.togglesPlayerName {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.togglesGrid {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  grid-column: span 3;
-  padding-bottom: 9px;
 }
