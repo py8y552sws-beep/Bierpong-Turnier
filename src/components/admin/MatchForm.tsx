@@ -153,6 +153,11 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
       scoreA = toNonNegativeInt(scoreATrim);
       scoreB = toNonNegativeInt(scoreBTrim);
       if (scoreA === scoreB) return setError("Unentschieden ist nicht möglich – die Ergebnisse müssen sich unterscheiden.");
+      // Ein Beer-Pong-Spiel endet erst, wenn eine Seite alle 10 Becher
+      // getroffen hat – Endstände wie 9:8 oder 7:5 sind daher ungültig.
+      if (Math.max(scoreA, scoreB) !== 10) {
+        return setError("Eine Seite muss genau 10 Cups getroffen haben (z.B. 10:7) – andere Endstände sind nicht speicherbar.");
+      }
     }
 
     setError(null);

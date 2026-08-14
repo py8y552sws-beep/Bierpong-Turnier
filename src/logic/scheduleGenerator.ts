@@ -210,3 +210,57 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
 
   return newMatches;
 }
+
+/**
+ * Korrigiert bereits abgeleitete K.O.-Matches (Finale, Spiel um Platz 3/5/7),
+ * falls sich Sieger/Verlierer einer Vorstufe nachträglich ändern – z.B. weil
+ * ein Halbfinal-Ergebnis nach dem Speichern noch einmal korrigiert wird.
+ * `deriveNextStageMatches` legt Folge-Matches nur EINMAL an und lässt sie
+ * danach unangetastet; ohne diese Korrektur würde ein bereits erzeugtes
+ * Finale weiterhin den alten (falschen) Sieger als Teilnehmer führen. War
+ * das betroffene Match bereits gespielt, gehört dieses Ergebnis nicht mehr
+ * zu den neu ermittelten Teilnehmern und wird deshalb auf "offen"
+ * zurückgesetzt – es muss neu eingetragen werden.
+ */
+export function reconcileDerivedMatches(matches: readonly Match[]): readonly Match[] {
+  const singlesMatches = matches.filter((m) => m.matchType === "singles");
+  const semifinals = singlesMatches.filter((m) => m.round === "semifinal");
+  const consolationSemifinals = singlesMatches.filter((m) => m.round === "consolation_semifinal");
+
+  let result = matches;
+
+  if (semifinals.length === 2 && semifinals.every(isMatchPlayed)) {
+    const [semi1, semi2] = semifinals as [PlayedMatch, PlayedMatch];
+    result = reconcileRoundParticipants(result, "final", winnerOf(semi1), winnerOf(semi2));
+    result = reconcileRoundParticipants(result, "third_place", loserOf(semi1), loserOf(semi2));
+  }
+
+  if (consolationSemifinals.length === 2 && consolationSemifinals.every(isMatchPlayed)) {
+    const [semi1, semi2] = consolationSemifinals as [PlayedMatch, PlayedMatch];
+    result = reconcileRoundParticipants(result, "fifth_place", winnerOf(semi1), winnerOf(semi2));
+    result = reconcileRoundParticipants(result, "seventh_place", loserOf(semi1), loserOf(semi2));
+  }
+
+  return result;
+}
+
+function reconcileRoundParticipants(
+  matches: readonly Match[],
+  round: SinglesRound,
+  expectedA: PlayerId,
+  expectedB: PlayerId,
+): Match[] {
+  return matches.map((m) => {
+    if (m.matchType !== "singles" || m.round !== round) return m;
+    if (m.sideA.playerIds[0] === expectedA && m.sideB.playerIds[0] === expectedB) return m;
+
+    return {
+      ...m,
+      sideA: { playerIds: [expectedA] },
+      sideB: { playerIds: [expectedB] },
+      scoreA: null,
+      scoreB: null,
+      playerStats: [],
+    };
+  });
+}
