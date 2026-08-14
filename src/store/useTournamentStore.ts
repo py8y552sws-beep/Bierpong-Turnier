@@ -20,7 +20,7 @@ import type {
 } from "../types";
 import { generateId } from "../utils/id";
 
-interface TournamentState {
+export interface TournamentState {
   readonly teams: readonly DoublesTeam[];
   readonly matches: readonly Match[];
   readonly predictions: Readonly<Record<PlayerId, Prediction>>;

@@ -29,7 +29,9 @@ function emptyStat(): StatInput {
   return {
     cups: "",
     bounceHits: "",
-    longestStreak: "",
+    // Default 1: wer mindestens einen Becher trifft, hat automatisch schon
+    // eine Serie von 1.
+    longestStreak: "1",
     islandHits: "",
     bombHits: "",
     trickshotHits: "",
@@ -305,7 +307,7 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
                 className={formStyles.input}
                 type="number"
                 min={0}
-                value={stats[playerId]?.longestStreak ?? ""}
+                value={stats[playerId]?.longestStreak ?? "1"}
                 onChange={(e) => updateStat(playerId, "longestStreak", e.target.value)}
               />
             </div>

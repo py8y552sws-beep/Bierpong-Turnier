@@ -1,13 +1,25 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
+import { useSyncStatus } from "../../hooks/useSyncStatus";
 import { ADMIN_NAV, ALL_NAV, PRIMARY_NAV } from "./nav";
 import styles from "./AppShell.module.css";
+
+const FOOTER_SYNC_LABELS: Readonly<Record<string, string>> = {
+  disabled: "lokal gespeichert",
+  connecting: "Sync verbindet …",
+  waiting_for_bootstrap: "Sync bereit (siehe Admin)",
+  synced: "Cloud-Sync aktiv",
+  offline: "Sync offline",
+  error: "Sync-Fehler",
+};
 
 interface AppShellProps {
   readonly children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const syncStatus = useSyncStatus();
+
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -53,7 +65,7 @@ export function AppShell({ children }: AppShellProps) {
           </NavLink>
         </nav>
 
-        <div className={styles.footer}>8 Spieler · lokal gespeichert</div>
+        <div className={styles.footer}>8 Spieler · {FOOTER_SYNC_LABELS[syncStatus]}</div>
       </aside>
 
       <main className={styles.main}>

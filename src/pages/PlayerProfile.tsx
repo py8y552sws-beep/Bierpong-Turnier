@@ -105,7 +105,7 @@ function PlayerProfileContent({ playerId }: { playerId: import("../types").Playe
                           </td>
                           <td className={tableStyles.num}>{entry.ownStat?.cups ?? "–"}</td>
                           <td className={tableStyles.num}>{entry.ownStat?.bounceHits ?? "–"}</td>
-                          <td className={tableStyles.num}>{entry.ownStat?.longestStreak ?? "–"}</td>
+                          <td className={tableStyles.num}>{entry.ownStat?.longestStreak ?? 1}</td>
                           <td className={styles.achievementCell}>
                             {entry.achievements.length === 0
                               ? "–"
