@@ -12,12 +12,12 @@
  * ist, aktiviert sich der Cloud-Sync automatisch (siehe store/firebaseSync.ts).
  */
 export const FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyDJlNK-DyEy0dYY9cvNDmADTKvrQMsk2aM",
+  authDomain: "bierpong-championship.firebaseapp.com",
+  projectId: "bierpong-championship",
+  storageBucket: "bierpong-championship.firebasestorage.app",
+  messagingSenderId: "154074729966",
+  appId: "1:154074729966:web:f12cd33c35bfd40f6252ff",
 };
 
 export function isFirebaseConfigured(): boolean {
