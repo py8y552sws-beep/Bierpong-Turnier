@@ -153,7 +153,10 @@ export function calculatePlayerMatchAggregates(
           agg.longestStreakEver = Math.max(agg.longestStreakEver, stat.longestStreak);
           if (stat.longestStreak >= STREAK_3_THRESHOLD) agg.streak3Count += 1;
           if (stat.longestStreak >= STREAK_5_THRESHOLD) agg.streak5Count += 1;
-          if (won && (stat.reRacks ?? 0) === 0) agg.hasWinWithZeroRerack = true;
+          // Default ist 1 (mit Umstellen), da die meisten Spiele so laufen –
+          // ein fehlendes Feld (z.B. bei sehr alten Matches) gilt daher NICHT
+          // automatisch als "ohne Umstellen gewonnen".
+          if (won && (stat.reRacks ?? 1) === 0) agg.hasWinWithZeroRerack = true;
         }
 
         if (match.matchType === "singles" && match.round === "group") {

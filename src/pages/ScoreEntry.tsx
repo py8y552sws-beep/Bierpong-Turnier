@@ -11,7 +11,7 @@ import { roundLabel } from "../constants/rounds";
 import { useMatches, usePlayerForm, useTeamForm, useTeams, useTournamentActions } from "../hooks/useTournamentData";
 import { calculateMatchAchievements } from "../logic/achievements";
 import { isMatchPlayed } from "../logic/matchStatus";
-import type { Match, MatchInput, MatchSide, PlayerId, TeamId } from "../types";
+import type { Match, MatchInput, MatchSide, MatchType, PlayerId, TeamId } from "../types";
 import { generateId } from "../utils/id";
 import { getSideLabel } from "../utils/matchLabels";
 import styles from "./ScoreEntry.module.css";
@@ -25,6 +25,7 @@ interface Draft {
   readonly island: Record<string, number>;
   readonly bomb: Record<string, number>;
   readonly trickshot: Record<string, number>;
+  /** 1 = mit Umstellen (Default), 0 = "Ohne Umstellen" angehakt. */
   readonly rerack: Record<string, number>;
 }
 
@@ -57,26 +58,45 @@ function buildDraft(match: Match | null): Draft {
     island[id] = stat?.islandHits ?? 0;
     bomb[id] = stat?.bombHits ?? 0;
     trickshot[id] = stat?.trickshotHits ?? 0;
-    rerack[id] = stat?.reRacks ?? 0;
+    rerack[id] = stat?.reRacks ?? 1;
   }
   return { ...draft, bounce, streak, cups, island, bomb, trickshot, rerack };
 }
 
-type StatKind = "bounce" | "streak" | "cups" | "island" | "bomb" | "trickshot" | "rerack";
+type StatKind = "bounce" | "streak" | "cups" | "island" | "bomb" | "trickshot";
+
+/**
+ * Effektiver Endstand einer Matchseite: bei Einzel direkt der ausgewählte
+ * Score-Button, bei Doppel automatisch die Summe der pro Spieler
+ * eingetragenen Becher-Treffer – so entsteht das Endergebnis immer korrekt
+ * aus den Einzelbeiträgen, ohne dass beides manuell synchron gehalten
+ * werden müsste.
+ */
+function effectiveScore(match: Match, side: "A" | "B", draft: Draft): number {
+  if (match.matchType === "singles") {
+    return side === "A" ? draft.scoreA : draft.scoreB;
+  }
+  const matchSide = side === "A" ? match.sideA : match.sideB;
+  return matchSide.playerIds.reduce((sum, id) => sum + (draft.cups[id] ?? 0), 0);
+}
+
+const SCORE_OPTIONS = Array.from({ length: 11 }, (_, i) => i); // 0..10
 
 export function ScoreEntry() {
   const matches = useMatches();
   const teams = useTeams();
   const { updateMatch } = useTournamentActions();
+  const [tournament, setTournament] = useState<MatchType>("singles");
   const [filter, setFilter] = useState<"open" | "all">("open");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [toasts, setToasts] = useState<readonly AchievementToastEntry[]>([]);
 
   const list = useMemo(() => {
-    const base = filter === "open" ? matches.filter((m) => !isMatchPlayed(m)) : matches;
+    const byTournament = matches.filter((m) => m.matchType === tournament);
+    const base = filter === "open" ? byTournament.filter((m) => !isMatchPlayed(m)) : byTournament;
     return base.slice().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }, [matches, filter]);
+  }, [matches, filter, tournament]);
 
   const selected = list.find((m) => m.id === selectedId) ?? list[0] ?? null;
   const selectedKey = selected?.id ?? null;
@@ -93,17 +113,6 @@ export function ScoreEntry() {
     setToasts((prev) => prev.filter((t) => t.toastId !== toastId));
   }
 
-  if (!selected) {
-    return (
-      <>
-        <PageHeader title="Ergebnis eintragen" subtitle="Schnelle Live-Eingabe für den aktuellen Tisch." />
-        <Card>
-          <EmptyState message="Alle Matches sind bereits gespielt. 🎉" />
-        </Card>
-      </>
-    );
-  }
-
   function setScore(side: "A" | "B", value: number) {
     setDraft((d) => ({ ...d, [side === "A" ? "scoreA" : "scoreB"]: value }));
   }
@@ -115,8 +124,14 @@ export function ScoreEntry() {
     }));
   }
 
-  const tie = draft.scoreA === draft.scoreB;
-  const canSave = !tie;
+  function setNoRerack(playerId: string, noRerack: boolean) {
+    setDraft((d) => ({ ...d, rerack: { ...d.rerack, [playerId]: noRerack ? 0 : 1 } }));
+  }
+
+  const scoreA = selected ? effectiveScore(selected, "A", draft) : 0;
+  const scoreB = selected ? effectiveScore(selected, "B", draft) : 0;
+  const tie = scoreA === scoreB;
+  const canSave = selected !== null && !tie;
 
   function handleSave() {
     if (!selected || !canSave) return;
@@ -126,15 +141,15 @@ export function ScoreEntry() {
       cups:
         selected.matchType === "singles"
           ? selected.sideA.playerIds.includes(id)
-            ? draft.scoreA
-            : draft.scoreB
+            ? scoreA
+            : scoreB
           : (draft.cups[id] ?? 0),
       bounceHits: draft.bounce[id] ?? 0,
       longestStreak: draft.streak[id] ?? 0,
       islandHits: draft.island[id] ?? 0,
       bombHits: draft.bomb[id] ?? 0,
       trickshotHits: draft.trickshot[id] ?? 0,
-      reRacks: draft.rerack[id] ?? 0,
+      reRacks: draft.rerack[id] ?? 1,
     }));
 
     const input: MatchInput = {
@@ -142,8 +157,8 @@ export function ScoreEntry() {
       round: selected.round,
       sideA: selected.sideA,
       sideB: selected.sideB,
-      scoreA: draft.scoreA,
-      scoreB: draft.scoreB,
+      scoreA,
+      scoreB,
       playerStats,
     };
 
@@ -164,16 +179,33 @@ export function ScoreEntry() {
     setSelectedId(null);
   }
 
-  const isDoubles = selected.matchType === "doubles";
+  const isDoubles = tournament === "doubles";
 
   return (
     <>
       <AchievementToastStack toasts={toasts} onDismiss={dismissToast} />
 
-      <PageHeader title="Ergebnis eintragen" subtitle="Endstand auswählen, Bounces zählen, speichern." />
+      <PageHeader title="Ergebnis eintragen" subtitle="Turnier wählen, Endstand erfassen, speichern." />
 
       <Card>
         <div className={styles.pickerScroll}>
+          <div className={styles.picker}>
+            {(["singles", "doubles"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`${styles.chip} ${tournament === t ? styles.chipActive : ""}`}
+                onClick={() => {
+                  setTournament(t);
+                  setSelectedId(null);
+                }}
+              >
+                {t === "singles" ? "Einzelturnier" : "Doppelturnier"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={styles.pickerScroll} style={{ marginTop: 8 }}>
           <div className={styles.picker}>
             {(["open", "all"] as const).map((f) => (
               <button
@@ -187,75 +219,89 @@ export function ScoreEntry() {
             ))}
           </div>
         </div>
-        <div className={styles.pickerScroll} style={{ marginTop: 8 }}>
-          <div className={styles.picker}>
-            {list.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                className={`${styles.chip} ${m.id === selected.id ? styles.chipActive : ""} ${isMatchPlayed(m) ? styles.chipPlayed : ""}`}
-                onClick={() => setSelectedId(m.id)}
-              >
-                {getSideLabel(m.sideA, teams)} vs. {getSideLabel(m.sideB, teams)}
-                <span className={styles.chipRound}>{roundLabel(m.matchType, m.round)}</span>
-              </button>
-            ))}
+        {list.length > 0 && (
+          <div className={styles.pickerScroll} style={{ marginTop: 8 }}>
+            <div className={styles.picker}>
+              {list.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`${styles.chip} ${selected && m.id === selected.id ? styles.chipActive : ""} ${isMatchPlayed(m) ? styles.chipPlayed : ""}`}
+                  onClick={() => setSelectedId(m.id)}
+                >
+                  {getSideLabel(m.sideA, teams)} vs. {getSideLabel(m.sideB, teams)}
+                  <span className={styles.chipRound}>{roundLabel(m.matchType, m.round)}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </Card>
 
       <div style={{ height: 20 }} />
 
-      <Card
-        title={roundLabel(selected.matchType, selected.round)}
-        actions={<Badge variant={isDoubles ? "accent" : "neutral"}>{isDoubles ? "Doppel" : "Einzel"}</Badge>}
-      >
-        <div className={styles.arena}>
-          <SidePanel
-            side="A"
-            match={selected}
-            teams={teams}
-            score={draft.scoreA}
-            onScoreSelect={(value) => setScore("A", value)}
-            draft={draft}
-            onStatChange={adjustStat}
-            isDoubles={isDoubles}
-            showDetails={showDetails}
+      {!selected ? (
+        <Card>
+          <EmptyState
+            message={
+              filter === "open"
+                ? `Alle ${isDoubles ? "Doppelturnier" : "Einzelturnier"}-Spiele sind bereits gespielt. 🎉`
+                : `Für das ${isDoubles ? "Doppelturnier" : "Einzelturnier"} sind noch keine Spiele angesetzt.`
+            }
           />
-          <span className={styles.vsDivider}>vs</span>
-          <SidePanel
-            side="B"
-            match={selected}
-            teams={teams}
-            score={draft.scoreB}
-            onScoreSelect={(value) => setScore("B", value)}
-            draft={draft}
-            onStatChange={adjustStat}
-            isDoubles={isDoubles}
-            showDetails={showDetails}
-          />
-        </div>
+        </Card>
+      ) : (
+        <Card
+          title={roundLabel(selected.matchType, selected.round)}
+          actions={<Badge variant={isDoubles ? "accent" : "neutral"}>{isDoubles ? "Doppel" : "Einzel"}</Badge>}
+        >
+          <div className={styles.arena}>
+            <SidePanel
+              side="A"
+              match={selected}
+              teams={teams}
+              score={scoreA}
+              onScoreSelect={(value) => setScore("A", value)}
+              draft={draft}
+              onStatChange={adjustStat}
+              onNoRerackChange={setNoRerack}
+              isDoubles={isDoubles}
+              showDetails={showDetails}
+            />
+            <span className={styles.vsDivider}>vs</span>
+            <SidePanel
+              side="B"
+              match={selected}
+              teams={teams}
+              score={scoreB}
+              onScoreSelect={(value) => setScore("B", value)}
+              draft={draft}
+              onStatChange={adjustStat}
+              onNoRerackChange={setNoRerack}
+              isDoubles={isDoubles}
+              showDetails={showDetails}
+            />
+          </div>
 
-        <div style={{ textAlign: "center" }}>
-          <button type="button" className={styles.detailsToggle} onClick={() => setShowDetails((v) => !v)}>
-            {showDetails ? "Details ausblenden" : "Details (Cups, Serie, Island, Bombe, Trickshot, Re-Racks) anzeigen"}
-          </button>
-        </div>
+          <div style={{ textAlign: "center" }}>
+            <button type="button" className={styles.detailsToggle} onClick={() => setShowDetails((v) => !v)}>
+              {showDetails ? "Details ausblenden" : "Details (Serie, Island, Bombe, Trickshot, Umstellen) anzeigen"}
+            </button>
+          </div>
 
-        <div className={styles.saveBar}>
-          <span className={styles.saveHint}>
-            {tie ? "Unentschieden ist nicht möglich – Ergebnisse müssen sich unterscheiden." : "Bereit zum Speichern."}
-          </span>
-          <Button variant="primary" onClick={handleSave} disabled={!canSave}>
-            Ergebnis speichern
-          </Button>
-        </div>
-      </Card>
+          <div className={styles.saveBar}>
+            <span className={styles.saveHint}>
+              {tie ? "Unentschieden ist nicht möglich – Ergebnisse müssen sich unterscheiden." : "Bereit zum Speichern."}
+            </span>
+            <Button variant="primary" onClick={handleSave} disabled={!canSave}>
+              Ergebnis speichern
+            </Button>
+          </div>
+        </Card>
+      )}
     </>
   );
 }
-
-const SCORE_OPTIONS = Array.from({ length: 11 }, (_, i) => i); // 0..10
 
 interface SidePanelProps {
   readonly side: "A" | "B";
@@ -265,11 +311,23 @@ interface SidePanelProps {
   readonly onScoreSelect: (value: number) => void;
   readonly draft: Draft;
   readonly onStatChange: (kind: StatKind, playerId: string, delta: number) => void;
+  readonly onNoRerackChange: (playerId: string, noRerack: boolean) => void;
   readonly isDoubles: boolean;
   readonly showDetails: boolean;
 }
 
-function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChange, isDoubles, showDetails }: SidePanelProps) {
+function SidePanel({
+  side,
+  match,
+  teams,
+  score,
+  onScoreSelect,
+  draft,
+  onStatChange,
+  onNoRerackChange,
+  isDoubles,
+  showDetails,
+}: SidePanelProps) {
   const matchSide: MatchSide = side === "A" ? match.sideA : match.sideB;
   const name = getSideLabel(matchSide, teams);
 
@@ -278,18 +336,32 @@ function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChan
       <span className={styles.sideName}>{name}</span>
       <SideFormDots playerId={!isDoubles ? matchSide.playerIds[0] : undefined} teamId={matchSide.teamId} />
 
-      <div className={styles.scoreGrid} role="group" aria-label={`${name}: Becher auswählen`}>
-        {SCORE_OPTIONS.map((value) => (
-          <button
-            key={value}
-            type="button"
-            className={`${styles.scoreOption} ${value === score ? styles.scoreOptionActive : ""}`}
-            onClick={() => onScoreSelect(value)}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
+      {isDoubles ? (
+        <div className={styles.cupsBlock}>
+          {matchSide.playerIds.map((playerId) => (
+            <div key={playerId} className={styles.playerTally}>
+              <span className={styles.playerTallyName}>{getPlayerName(playerId)} · Cups</span>
+              <TallyControls value={draft.cups[playerId] ?? 0} onChange={(d) => onStatChange("cups", playerId, d)} />
+            </div>
+          ))}
+          <div className={styles.computedScore}>
+            Team-Score: <span className={styles.computedScoreValue}>{score}</span>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.scoreGrid} role="group" aria-label={`${name}: Becher auswählen`}>
+          {SCORE_OPTIONS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`${styles.scoreOption} ${value === score ? styles.scoreOptionActive : ""}`}
+              onClick={() => onScoreSelect(value)}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={styles.bounceBlock}>
         {matchSide.playerIds.map((playerId) => (
@@ -305,12 +377,6 @@ function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChan
           {matchSide.playerIds.map((playerId) => (
             <div key={playerId} className={styles.detailsPlayer}>
               <span className={styles.detailsPlayerName}>{getPlayerName(playerId)}</span>
-              {isDoubles && (
-                <div className={styles.playerTally}>
-                  <span className={styles.playerTallyName}>Cups</span>
-                  <TallyControls value={draft.cups[playerId] ?? 0} onChange={(d) => onStatChange("cups", playerId, d)} />
-                </div>
-              )}
               <div className={styles.playerTally}>
                 <span className={styles.playerTallyName}>Längste Serie</span>
                 <TallyControls value={draft.streak[playerId] ?? 0} onChange={(d) => onStatChange("streak", playerId, d)} />
@@ -327,10 +393,14 @@ function SidePanel({ side, match, teams, score, onScoreSelect, draft, onStatChan
                 <span className={styles.playerTallyName}>Trickshots</span>
                 <TallyControls value={draft.trickshot[playerId] ?? 0} onChange={(d) => onStatChange("trickshot", playerId, d)} />
               </div>
-              <div className={styles.playerTally}>
-                <span className={styles.playerTallyName}>Re-Racks</span>
-                <TallyControls value={draft.rerack[playerId] ?? 0} onChange={(d) => onStatChange("rerack", playerId, d)} />
-              </div>
+              <label className={styles.rerackCheckboxRow}>
+                <input
+                  type="checkbox"
+                  checked={(draft.rerack[playerId] ?? 1) === 0}
+                  onChange={(e) => onNoRerackChange(playerId, e.target.checked)}
+                />
+                Ohne Umstellen gespielt
+              </label>
             </div>
           ))}
         </div>

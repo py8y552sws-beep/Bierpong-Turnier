@@ -32,7 +32,9 @@ function emptyStat(): StatInput {
     islandHits: "",
     bombHits: "",
     trickshotHits: "",
-    reRacks: "",
+    // Default "mit Umstellen" (1) – die meisten Spiele laufen so, "ohne
+    // Umstellen" (0) wird explizit über die Checkbox gesetzt.
+    reRacks: "1",
   };
 }
 
@@ -46,7 +48,7 @@ function statFromMatch(match: Match | undefined, playerId: PlayerId): StatInput 
     islandHits: String(stat.islandHits ?? 0),
     bombHits: String(stat.bombHits ?? 0),
     trickshotHits: String(stat.trickshotHits ?? 0),
-    reRacks: String(stat.reRacks ?? 0),
+    reRacks: String(stat.reRacks ?? 1),
   };
 }
 
@@ -347,22 +349,21 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
 
           <div className={styles.playerStatRow}>
             <span />
-            <span className={styles.scoreLabel}>Re-Racks</span>
+            <span className={styles.scoreLabel}>Ohne Umstellen</span>
             <span />
             <span />
           </div>
           {relevantPlayers.map((playerId) => (
             <div className={styles.playerStatRow} key={`${playerId}-rerack`}>
               <span>{getPlayerName(playerId)}</span>
-              <input
-                className={formStyles.input}
-                type="number"
-                min={0}
-                value={stats[playerId]?.reRacks ?? ""}
-                onChange={(e) => updateStat(playerId, "reRacks", e.target.value)}
-              />
-              <span />
-              <span />
+              <label className={styles.rerackCheckbox}>
+                <input
+                  type="checkbox"
+                  checked={(stats[playerId]?.reRacks ?? "1") === "0"}
+                  onChange={(e) => updateStat(playerId, "reRacks", e.target.checked ? "0" : "1")}
+                />
+                Ohne Umstellen gewonnen
+              </label>
             </div>
           ))}
         </div>
