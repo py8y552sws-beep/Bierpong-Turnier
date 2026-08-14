@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "../common/Button";
+import { YesNoToggle } from "../common/YesNoToggle";
 import formStyles from "../common/form.module.css";
 import { getPlayerName, PLAYERS } from "../../constants/players";
 import { DOUBLES_ROUNDS, SINGLES_ROUNDS, roundLabel } from "../../constants/rounds";
@@ -55,6 +56,10 @@ function statFromMatch(match: Match | undefined, playerId: PlayerId): StatInput 
 function toNonNegativeInt(value: string): number {
   const n = Number.parseInt(value, 10);
   return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function toBool(value: string | undefined): boolean {
+  return toNonNegativeInt(value ?? "0") > 0;
 }
 
 export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchFormProps) {
@@ -284,7 +289,6 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
           <div className={styles.playerStatRow}>
             <span />
             <span className={styles.scoreLabel}>Cups</span>
-            <span className={styles.scoreLabel}>Bounce</span>
             <span className={styles.scoreLabel}>Längste Serie</span>
           </div>
           {relevantPlayers.map((playerId) => (
@@ -301,69 +305,42 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
                 className={formStyles.input}
                 type="number"
                 min={0}
-                value={stats[playerId]?.bounceHits ?? ""}
-                onChange={(e) => updateStat(playerId, "bounceHits", e.target.value)}
-              />
-              <input
-                className={formStyles.input}
-                type="number"
-                min={0}
                 value={stats[playerId]?.longestStreak ?? ""}
                 onChange={(e) => updateStat(playerId, "longestStreak", e.target.value)}
               />
             </div>
           ))}
 
-          <div className={styles.playerStatRow}>
-            <span />
-            <span className={styles.scoreLabel}>Island</span>
-            <span className={styles.scoreLabel}>Bombe</span>
-            <span className={styles.scoreLabel}>Trickshot</span>
-          </div>
           {relevantPlayers.map((playerId) => (
-            <div className={styles.playerStatRow} key={`${playerId}-special`}>
-              <span>{getPlayerName(playerId)}</span>
-              <input
-                className={formStyles.input}
-                type="number"
-                min={0}
-                value={stats[playerId]?.islandHits ?? ""}
-                onChange={(e) => updateStat(playerId, "islandHits", e.target.value)}
-              />
-              <input
-                className={formStyles.input}
-                type="number"
-                min={0}
-                value={stats[playerId]?.bombHits ?? ""}
-                onChange={(e) => updateStat(playerId, "bombHits", e.target.value)}
-              />
-              <input
-                className={formStyles.input}
-                type="number"
-                min={0}
-                value={stats[playerId]?.trickshotHits ?? ""}
-                onChange={(e) => updateStat(playerId, "trickshotHits", e.target.value)}
-              />
-            </div>
-          ))}
-
-          <div className={styles.playerStatRow}>
-            <span />
-            <span className={styles.scoreLabel}>Ohne Umstellen</span>
-            <span />
-            <span />
-          </div>
-          {relevantPlayers.map((playerId) => (
-            <div className={styles.playerStatRow} key={`${playerId}-rerack`}>
-              <span>{getPlayerName(playerId)}</span>
-              <label className={styles.rerackCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={(stats[playerId]?.reRacks ?? "1") === "0"}
-                  onChange={(e) => updateStat(playerId, "reRacks", e.target.checked ? "0" : "1")}
+            <div className={styles.togglesBlock} key={`${playerId}-toggles`}>
+              <span className={styles.togglesPlayerName}>{getPlayerName(playerId)}</span>
+              <div className={styles.togglesGrid}>
+                <YesNoToggle
+                  label="Bounce-Treffer"
+                  value={toBool(stats[playerId]?.bounceHits)}
+                  onChange={(v) => updateStat(playerId, "bounceHits", v ? "1" : "0")}
                 />
-                Ohne Umstellen gewonnen
-              </label>
+                <YesNoToggle
+                  label="Island-Treffer"
+                  value={toBool(stats[playerId]?.islandHits)}
+                  onChange={(v) => updateStat(playerId, "islandHits", v ? "1" : "0")}
+                />
+                <YesNoToggle
+                  label="Bomben-Treffer"
+                  value={toBool(stats[playerId]?.bombHits)}
+                  onChange={(v) => updateStat(playerId, "bombHits", v ? "1" : "0")}
+                />
+                <YesNoToggle
+                  label="Trickshot"
+                  value={toBool(stats[playerId]?.trickshotHits)}
+                  onChange={(v) => updateStat(playerId, "trickshotHits", v ? "1" : "0")}
+                />
+                <YesNoToggle
+                  label="Ohne Umstellen gewonnen"
+                  value={(stats[playerId]?.reRacks ?? "1") === "0"}
+                  onChange={(v) => updateStat(playerId, "reRacks", v ? "0" : "1")}
+                />
+              </div>
             </div>
           ))}
         </div>

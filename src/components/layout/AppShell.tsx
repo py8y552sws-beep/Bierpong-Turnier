@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { ADMIN_NAV, PRIMARY_NAV } from "./nav";
+import { ADMIN_NAV, ALL_NAV, PRIMARY_NAV } from "./nav";
 import styles from "./AppShell.module.css";
 
 interface AppShellProps {
@@ -59,6 +59,22 @@ export function AppShell({ children }: AppShellProps) {
       <main className={styles.main}>
         <div className={styles.content}>{children}</div>
       </main>
+
+      <nav className={styles.mobileNav} aria-label="Hauptnavigation (mobil)">
+        {ALL_NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              isActive ? `${styles.mobileNavLink} ${styles.mobileNavLinkActive}` : styles.mobileNavLink
+            }
+          >
+            <item.icon className={styles.mobileNavIcon} aria-hidden="true" />
+            <span className={styles.mobileNavLabel}>{item.mobileLabel ?? item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 }

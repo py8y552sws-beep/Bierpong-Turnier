@@ -6,6 +6,7 @@ import { Card } from "../components/common/Card";
 import { EmptyState } from "../components/common/EmptyState";
 import { FormDots } from "../components/common/FormDots";
 import { PageHeader } from "../components/common/PageHeader";
+import { YesNoToggle } from "../components/common/YesNoToggle";
 import { getPlayerName, PLAYERS } from "../constants/players";
 import { roundLabel } from "../constants/rounds";
 import { useMatches, usePlayerForm, useTeamForm, useTeams, useTournamentActions } from "../hooks/useTournamentData";
@@ -19,6 +20,7 @@ import styles from "./ScoreEntry.module.css";
 interface Draft {
   readonly scoreA: number;
   readonly scoreB: number;
+  /** 0/1 – Bounce/Island/Bombe/Trickshot sind Ja/Nein-Angaben pro Match. */
   readonly bounce: Record<string, number>;
   readonly streak: Record<string, number>;
   readonly cups: Record<string, number>;
@@ -63,7 +65,8 @@ function buildDraft(match: Match | null): Draft {
   return { ...draft, bounce, streak, cups, island, bomb, trickshot, rerack };
 }
 
-type StatKind = "bounce" | "streak" | "cups" | "island" | "bomb" | "trickshot";
+type TallyKind = "streak" | "cups";
+type FlagKind = "bounce" | "island" | "bomb" | "trickshot";
 
 /**
  * Effektiver Endstand einer Matchseite: bei Einzel direkt der ausgewählte
@@ -117,11 +120,15 @@ export function ScoreEntry() {
     setDraft((d) => ({ ...d, [side === "A" ? "scoreA" : "scoreB"]: value }));
   }
 
-  function adjustStat(kind: StatKind, playerId: string, delta: number) {
+  function adjustTally(kind: TallyKind, playerId: string, delta: number) {
     setDraft((d) => ({
       ...d,
       [kind]: { ...d[kind], [playerId]: Math.max(0, (d[kind][playerId] ?? 0) + delta) },
     }));
+  }
+
+  function setFlag(kind: FlagKind, playerId: string, value: boolean) {
+    setDraft((d) => ({ ...d, [kind]: { ...d[kind], [playerId]: value ? 1 : 0 } }));
   }
 
   function setNoRerack(playerId: string, noRerack: boolean) {
@@ -263,7 +270,8 @@ export function ScoreEntry() {
               score={scoreA}
               onScoreSelect={(value) => setScore("A", value)}
               draft={draft}
-              onStatChange={adjustStat}
+              onTallyChange={adjustTally}
+              onFlagChange={setFlag}
               onNoRerackChange={setNoRerack}
               isDoubles={isDoubles}
               showDetails={showDetails}
@@ -276,7 +284,8 @@ export function ScoreEntry() {
               score={scoreB}
               onScoreSelect={(value) => setScore("B", value)}
               draft={draft}
-              onStatChange={adjustStat}
+              onTallyChange={adjustTally}
+              onFlagChange={setFlag}
               onNoRerackChange={setNoRerack}
               isDoubles={isDoubles}
               showDetails={showDetails}
@@ -285,7 +294,7 @@ export function ScoreEntry() {
 
           <div style={{ textAlign: "center" }}>
             <button type="button" className={styles.detailsToggle} onClick={() => setShowDetails((v) => !v)}>
-              {showDetails ? "Details ausblenden" : "Details (Serie, Island, Bombe, Trickshot, Umstellen) anzeigen"}
+              {showDetails ? "Details ausblenden" : "Details (Bounce, Serie, Island, Bombe, Trickshot, Umstellen) anzeigen"}
             </button>
           </div>
 
@@ -310,7 +319,8 @@ interface SidePanelProps {
   readonly score: number;
   readonly onScoreSelect: (value: number) => void;
   readonly draft: Draft;
-  readonly onStatChange: (kind: StatKind, playerId: string, delta: number) => void;
+  readonly onTallyChange: (kind: TallyKind, playerId: string, delta: number) => void;
+  readonly onFlagChange: (kind: FlagKind, playerId: string, value: boolean) => void;
   readonly onNoRerackChange: (playerId: string, noRerack: boolean) => void;
   readonly isDoubles: boolean;
   readonly showDetails: boolean;
@@ -323,7 +333,8 @@ function SidePanel({
   score,
   onScoreSelect,
   draft,
-  onStatChange,
+  onTallyChange,
+  onFlagChange,
   onNoRerackChange,
   isDoubles,
   showDetails,
@@ -341,7 +352,7 @@ function SidePanel({
           {matchSide.playerIds.map((playerId) => (
             <div key={playerId} className={styles.playerTally}>
               <span className={styles.playerTallyName}>{getPlayerName(playerId)} · Cups</span>
-              <TallyControls value={draft.cups[playerId] ?? 0} onChange={(d) => onStatChange("cups", playerId, d)} />
+              <TallyControls value={draft.cups[playerId] ?? 0} onChange={(d) => onTallyChange("cups", playerId, d)} />
             </div>
           ))}
           <div className={styles.computedScore}>
@@ -363,15 +374,6 @@ function SidePanel({
         </div>
       )}
 
-      <div className={styles.bounceBlock}>
-        {matchSide.playerIds.map((playerId) => (
-          <div key={playerId} className={styles.playerTally}>
-            <span className={styles.playerTallyName}>{getPlayerName(playerId)} · Bounce</span>
-            <TallyControls value={draft.bounce[playerId] ?? 0} onChange={(d) => onStatChange("bounce", playerId, d)} />
-          </div>
-        ))}
-      </div>
-
       {showDetails && (
         <div className={styles.detailsPanel}>
           {matchSide.playerIds.map((playerId) => (
@@ -379,28 +381,33 @@ function SidePanel({
               <span className={styles.detailsPlayerName}>{getPlayerName(playerId)}</span>
               <div className={styles.playerTally}>
                 <span className={styles.playerTallyName}>Längste Serie</span>
-                <TallyControls value={draft.streak[playerId] ?? 0} onChange={(d) => onStatChange("streak", playerId, d)} />
+                <TallyControls value={draft.streak[playerId] ?? 0} onChange={(d) => onTallyChange("streak", playerId, d)} />
               </div>
-              <div className={styles.playerTally}>
-                <span className={styles.playerTallyName}>Island-Treffer</span>
-                <TallyControls value={draft.island[playerId] ?? 0} onChange={(d) => onStatChange("island", playerId, d)} />
-              </div>
-              <div className={styles.playerTally}>
-                <span className={styles.playerTallyName}>Bomben-Treffer</span>
-                <TallyControls value={draft.bomb[playerId] ?? 0} onChange={(d) => onStatChange("bomb", playerId, d)} />
-              </div>
-              <div className={styles.playerTally}>
-                <span className={styles.playerTallyName}>Trickshots</span>
-                <TallyControls value={draft.trickshot[playerId] ?? 0} onChange={(d) => onStatChange("trickshot", playerId, d)} />
-              </div>
-              <label className={styles.rerackCheckboxRow}>
-                <input
-                  type="checkbox"
-                  checked={(draft.rerack[playerId] ?? 1) === 0}
-                  onChange={(e) => onNoRerackChange(playerId, e.target.checked)}
-                />
-                Ohne Umstellen gespielt
-              </label>
+              <YesNoToggle
+                label="Bounce-Treffer"
+                value={(draft.bounce[playerId] ?? 0) > 0}
+                onChange={(v) => onFlagChange("bounce", playerId, v)}
+              />
+              <YesNoToggle
+                label="Island-Treffer"
+                value={(draft.island[playerId] ?? 0) > 0}
+                onChange={(v) => onFlagChange("island", playerId, v)}
+              />
+              <YesNoToggle
+                label="Bomben-Treffer"
+                value={(draft.bomb[playerId] ?? 0) > 0}
+                onChange={(v) => onFlagChange("bomb", playerId, v)}
+              />
+              <YesNoToggle
+                label="Trickshot"
+                value={(draft.trickshot[playerId] ?? 0) > 0}
+                onChange={(v) => onFlagChange("trickshot", playerId, v)}
+              />
+              <YesNoToggle
+                label="Ohne Umstellen gespielt"
+                value={(draft.rerack[playerId] ?? 1) === 0}
+                onChange={(v) => onNoRerackChange(playerId, v)}
+              />
             </div>
           ))}
         </div>

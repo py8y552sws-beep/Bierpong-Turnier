@@ -9,7 +9,12 @@ export type LeaderboardMetric =
   | "bounceHits"
   | "winRate"
   | "averageCups"
-  | "longestStreak";
+  | "longestStreak"
+  | "longestWinStreak"
+  | "islandHits"
+  | "bombHits"
+  | "trickshotHits"
+  | "noRerackWins";
 
 export interface LeaderboardEntry {
   readonly playerId: PlayerId;
@@ -26,6 +31,11 @@ export const LEADERBOARD_LABELS: Readonly<Record<LeaderboardMetric, string>> = {
   winRate: "Beste Siegquote",
   averageCups: "Durchschnitt Cups",
   longestStreak: "Längste Treffer-Serie",
+  longestWinStreak: "Längste Siegesserie",
+  islandHits: "Meiste Island-Treffer",
+  bombHits: "Meiste Bomben-Treffer",
+  trickshotHits: "Meiste Trickshots",
+  noRerackWins: "Meiste Siege ohne Umstellen",
 };
 
 function metricValue(
@@ -47,6 +57,16 @@ function metricValue(
       return averageCups(aggregate);
     case "longestStreak":
       return aggregate.longestStreakEver;
+    case "longestWinStreak":
+      return aggregate.longestWinStreakEver;
+    case "islandHits":
+      return aggregate.islandHits;
+    case "bombHits":
+      return aggregate.bombHits;
+    case "trickshotHits":
+      return aggregate.trickshotHits;
+    case "noRerackWins":
+      return aggregate.noRerackWins;
   }
 }
 

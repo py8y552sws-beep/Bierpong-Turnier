@@ -31,6 +31,8 @@ export interface PlayerMatchAggregate {
   readonly longestWinStreakEver: number;
   /** Mindestens ein Sieg wurde ohne jegliche Umstellung (Re-Rack) erzielt. */
   readonly hasWinWithZeroRerack: boolean;
+  /** Anzahl Siege ohne Umstellung (Re-Rack). */
+  readonly noRerackWins: number;
   /** Anzahl Matches, in denen mindestens ein 3er-Serie erzielt wurde. */
   readonly streak3Count: number;
   /** Anzahl Matches, in denen mindestens ein 5er-Serie erzielt wurde. */
@@ -57,6 +59,7 @@ interface MutableAggregate {
   longestWinStreakEver: number;
   currentWinStreak: number;
   hasWinWithZeroRerack: boolean;
+  noRerackWins: number;
   streak3Count: number;
   streak5Count: number;
   groupMatchesPlayed: number;
@@ -81,6 +84,7 @@ function emptyAggregate(playerId: PlayerId): MutableAggregate {
     longestWinStreakEver: 0,
     currentWinStreak: 0,
     hasWinWithZeroRerack: false,
+    noRerackWins: 0,
     streak3Count: 0,
     streak5Count: 0,
     groupMatchesPlayed: 0,
@@ -156,7 +160,10 @@ export function calculatePlayerMatchAggregates(
           // Default ist 1 (mit Umstellen), da die meisten Spiele so laufen –
           // ein fehlendes Feld (z.B. bei sehr alten Matches) gilt daher NICHT
           // automatisch als "ohne Umstellen gewonnen".
-          if (won && (stat.reRacks ?? 1) === 0) agg.hasWinWithZeroRerack = true;
+          if (won && (stat.reRacks ?? 1) === 0) {
+            agg.hasWinWithZeroRerack = true;
+            agg.noRerackWins += 1;
+          }
         }
 
         if (match.matchType === "singles" && match.round === "group") {
