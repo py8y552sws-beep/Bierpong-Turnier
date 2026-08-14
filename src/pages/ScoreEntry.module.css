@@ -221,6 +221,12 @@
   color: var(--text-muted);
 }
 
+.lockedNote {
+  font-size: var(--fs-xs);
+  color: var(--accent-strong);
+  padding-top: 2px;
+}
+
 
 .saveBar {
   position: sticky;

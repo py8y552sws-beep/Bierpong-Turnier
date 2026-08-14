@@ -1,0 +1,121 @@
+.text {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.text:last-child {
+  margin-bottom: 0;
+}
+
+.text strong {
+  color: var(--text);
+}
+
+.formula {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent-strong);
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.steps {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.steps li {
+  margin-bottom: 4px;
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.achievementCategory {
+  margin-top: 18px;
+}
+
+.achievementCategoryTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.achievementGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.achievementCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated-2);
+}
+
+.achievementIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.achievementInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.achievementName {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.achievementDesc {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.achievementPoints {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent-strong);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .chipList {
+    gap: 6px;
+  }
+}

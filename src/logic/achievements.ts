@@ -324,3 +324,46 @@ export function calculateNextAchievementCandidates(
   candidates.sort((a, b) => a.remaining - b.remaining || b.points - a.points);
   return candidates.slice(0, limit);
 }
+
+/**
+ * Die 5 "Spezialwürfe"-Achievements, die schon beim ersten Vorkommen
+ * vollständig erreicht sind (weitere Treffer derselben Art bringen keine
+ * zusätzlichen Punkte mehr). Grundlage für die Ergebniseingabe: sobald ein
+ * Spieler eines davon freigeschaltet hat, macht das zugehörige Eingabefeld
+ * für ihn in künftigen Matches keinen Sinn mehr.
+ */
+export const SPECIAL_ENTRY_ACHIEVEMENT_IDS: readonly AchievementId[] = [
+  "bounce_master",
+  "island_hopper",
+  "bomb_squad",
+  "trickshot_artist",
+  "no_rerack_needed",
+];
+
+/**
+ * Ermittelt je Spieler, welche der 5 Spezialwürfe-Achievements bereits
+ * freigeschaltet sind – ausgewertet OHNE das gerade bearbeitete Match
+ * (excludeMatchId), damit ein Achievement, das genau in diesem Match zum
+ * ersten Mal erreicht wird, dort weiterhin editierbar bleibt. Dient der
+ * Ergebniseingabe, um bereits erreichte Spezialwürfe/„Ohne Umstellen" gar
+ * nicht mehr als Eingabeoption anzubieten.
+ */
+export function calculateLockedSpecialAchievements(
+  matches: readonly Match[],
+  excludeMatchId: string | null,
+): Readonly<Record<PlayerId, ReadonlySet<AchievementId>>> {
+  const relevant = excludeMatchId ? matches.filter((m) => m.id !== excludeMatchId) : matches;
+  const summaries = calculateAchievementSummaries(relevant);
+
+  const result = {} as Record<PlayerId, ReadonlySet<AchievementId>>;
+  for (const playerId of PLAYER_IDS) {
+    const locked = new Set<AchievementId>();
+    for (const id of SPECIAL_ENTRY_ACHIEVEMENT_IDS) {
+      const unlocked = summaries[playerId].achievements.find((a) => a.id === id)?.unlocked ?? false;
+      if (unlocked) locked.add(id);
+    }
+    result[playerId] = locked;
+  }
+
+  return result;
+}
