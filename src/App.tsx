@@ -7,6 +7,7 @@ import { DoublesTournament } from "./pages/DoublesTournament";
 import { PlayerProfile } from "./pages/PlayerProfile";
 import { PlayersList } from "./pages/PlayersList";
 import { Predictions } from "./pages/Predictions";
+import { Rules } from "./pages/Rules";
 import { ScoreEntry } from "./pages/ScoreEntry";
 import { SinglesTournament } from "./pages/SinglesTournament";
 import { Statistics } from "./pages/Statistics";
@@ -16,6 +17,7 @@ function App() {
     <AppShell>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/regeln" element={<Rules />} />
         <Route path="/eingabe" element={<ScoreEntry />} />
         <Route path="/spieler" element={<PlayersList />} />
         <Route path="/spieler/:playerId" element={<PlayerProfile />} />

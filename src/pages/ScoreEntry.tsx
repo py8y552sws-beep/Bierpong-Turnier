@@ -7,12 +7,13 @@ import { EmptyState } from "../components/common/EmptyState";
 import { FormDots } from "../components/common/FormDots";
 import { PageHeader } from "../components/common/PageHeader";
 import { YesNoToggle } from "../components/common/YesNoToggle";
+import { ACHIEVEMENT_DEFINITIONS } from "../constants/achievements";
 import { getPlayerName, PLAYERS } from "../constants/players";
 import { roundLabel } from "../constants/rounds";
 import { useMatches, usePlayerForm, useTeamForm, useTeams, useTournamentActions } from "../hooks/useTournamentData";
-import { calculateMatchAchievements } from "../logic/achievements";
+import { calculateLockedSpecialAchievements, calculateMatchAchievements } from "../logic/achievements";
 import { isMatchPlayed } from "../logic/matchStatus";
-import type { Match, MatchInput, MatchSide, MatchType, PlayerId, TeamId } from "../types";
+import type { AchievementId, Match, MatchInput, MatchSide, MatchType, PlayerId, TeamId } from "../types";
 import { generateId } from "../utils/id";
 import { getSideLabel } from "../utils/matchLabels";
 import styles from "./ScoreEntry.module.css";
@@ -141,6 +142,15 @@ export function ScoreEntry() {
   const scoreB = selected ? effectiveScore(selected, "B", draft) : 0;
   const tie = scoreA === scoreB;
   const canSave = selected !== null && !tie;
+
+  // Spezialwürfe/„Ohne Umstellen", die ein Spieler bereits an anderer
+  // Stelle erreicht hat, werden hier gar nicht mehr als Eingabeoption
+  // angeboten – weitere Treffer derselben Art bringen ohnehin keine
+  // zusätzlichen Achievement-Punkte mehr.
+  const lockedAchievements = useMemo(
+    () => (selected ? calculateLockedSpecialAchievements(matches, selected.id) : null),
+    [matches, selected],
+  );
 
   function handleSave() {
     if (!selected || !canSave) return;
@@ -277,6 +287,7 @@ export function ScoreEntry() {
               onNoRerackChange={setNoRerack}
               isDoubles={isDoubles}
               showDetails={showDetails}
+              lockedAchievements={lockedAchievements}
             />
             <span className={styles.vsDivider}>vs</span>
             <SidePanel
@@ -291,6 +302,7 @@ export function ScoreEntry() {
               onNoRerackChange={setNoRerack}
               isDoubles={isDoubles}
               showDetails={showDetails}
+              lockedAchievements={lockedAchievements}
             />
           </div>
 
@@ -326,6 +338,7 @@ interface SidePanelProps {
   readonly onNoRerackChange: (playerId: string, noRerack: boolean) => void;
   readonly isDoubles: boolean;
   readonly showDetails: boolean;
+  readonly lockedAchievements: Readonly<Record<string, ReadonlySet<AchievementId>>> | null;
 }
 
 function SidePanel({
@@ -340,6 +353,7 @@ function SidePanel({
   onNoRerackChange,
   isDoubles,
   showDetails,
+  lockedAchievements,
 }: SidePanelProps) {
   const matchSide: MatchSide = side === "A" ? match.sideA : match.sideB;
   const name = getSideLabel(matchSide, teams);
@@ -378,40 +392,64 @@ function SidePanel({
 
       {showDetails && (
         <div className={styles.detailsPanel}>
-          {matchSide.playerIds.map((playerId) => (
-            <div key={playerId} className={styles.detailsPlayer}>
-              <span className={styles.detailsPlayerName}>{getPlayerName(playerId)}</span>
-              <div className={styles.playerTally}>
-                <span className={styles.playerTallyName}>Längste Serie</span>
-                <TallyControls value={draft.streak[playerId] ?? 0} onChange={(d) => onTallyChange("streak", playerId, d)} />
+          {matchSide.playerIds.map((playerId) => {
+            const locked = lockedAchievements?.[playerId];
+            const showBounce = !locked?.has("bounce_master");
+            const showIsland = !locked?.has("island_hopper");
+            const showBomb = !locked?.has("bomb_squad");
+            const showTrickshot = !locked?.has("trickshot_artist");
+            const showRerack = !locked?.has("no_rerack_needed");
+
+            return (
+              <div key={playerId} className={styles.detailsPlayer}>
+                <span className={styles.detailsPlayerName}>{getPlayerName(playerId)}</span>
+                <div className={styles.playerTally}>
+                  <span className={styles.playerTallyName}>Längste Serie</span>
+                  <TallyControls value={draft.streak[playerId] ?? 1} onChange={(d) => onTallyChange("streak", playerId, d)} />
+                </div>
+                {showBounce && (
+                  <YesNoToggle
+                    label="Bounce-Treffer"
+                    value={(draft.bounce[playerId] ?? 0) > 0}
+                    onChange={(v) => onFlagChange("bounce", playerId, v)}
+                  />
+                )}
+                {showIsland && (
+                  <YesNoToggle
+                    label="Island-Treffer"
+                    value={(draft.island[playerId] ?? 0) > 0}
+                    onChange={(v) => onFlagChange("island", playerId, v)}
+                  />
+                )}
+                {showBomb && (
+                  <YesNoToggle
+                    label="Bomben-Treffer"
+                    value={(draft.bomb[playerId] ?? 0) > 0}
+                    onChange={(v) => onFlagChange("bomb", playerId, v)}
+                  />
+                )}
+                {showTrickshot && (
+                  <YesNoToggle
+                    label="Trickshot"
+                    value={(draft.trickshot[playerId] ?? 0) > 0}
+                    onChange={(v) => onFlagChange("trickshot", playerId, v)}
+                  />
+                )}
+                {showRerack && (
+                  <YesNoToggle
+                    label="Ohne Umstellen gespielt"
+                    value={(draft.rerack[playerId] ?? 1) === 0}
+                    onChange={(v) => onNoRerackChange(playerId, v)}
+                  />
+                )}
+                {locked && locked.size > 0 && (
+                  <span className={styles.lockedNote}>
+                    ✅ Bereits freigeschaltet: {[...locked].map((id) => ACHIEVEMENT_DEFINITIONS[id].name).join(", ")}
+                  </span>
+                )}
               </div>
-              <YesNoToggle
-                label="Bounce-Treffer"
-                value={(draft.bounce[playerId] ?? 0) > 0}
-                onChange={(v) => onFlagChange("bounce", playerId, v)}
-              />
-              <YesNoToggle
-                label="Island-Treffer"
-                value={(draft.island[playerId] ?? 0) > 0}
-                onChange={(v) => onFlagChange("island", playerId, v)}
-              />
-              <YesNoToggle
-                label="Bomben-Treffer"
-                value={(draft.bomb[playerId] ?? 0) > 0}
-                onChange={(v) => onFlagChange("bomb", playerId, v)}
-              />
-              <YesNoToggle
-                label="Trickshot"
-                value={(draft.trickshot[playerId] ?? 0) > 0}
-                onChange={(v) => onFlagChange("trickshot", playerId, v)}
-              />
-              <YesNoToggle
-                label="Ohne Umstellen gespielt"
-                value={(draft.rerack[playerId] ?? 1) === 0}
-                onChange={(v) => onNoRerackChange(playerId, v)}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

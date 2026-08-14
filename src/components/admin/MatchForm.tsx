@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "../common/Button";
 import { YesNoToggle } from "../common/YesNoToggle";
 import formStyles from "../common/form.module.css";
+import { ACHIEVEMENT_DEFINITIONS } from "../../constants/achievements";
 import { getPlayerName, PLAYERS } from "../../constants/players";
 import { DOUBLES_ROUNDS, SINGLES_ROUNDS, roundLabel } from "../../constants/rounds";
+import { useMatches } from "../../hooks/useTournamentData";
+import { calculateLockedSpecialAchievements } from "../../logic/achievements";
 import { getTeamLabel } from "../../utils/matchLabels";
 import type { DoublesTeam, Match, MatchInput, MatchPlayerStat, MatchType, PlayerId, TeamId } from "../../types";
 import styles from "./MatchForm.module.css";
@@ -65,6 +68,18 @@ function toBool(value: string | undefined): boolean {
 }
 
 export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchFormProps) {
+  const matches = useMatches();
+  // Spezialwürfe/„Ohne Umstellen", die ein Spieler bereits an anderer
+  // Stelle erreicht hat, werden hier gar nicht mehr als Eingabeoption
+  // angeboten – weitere Treffer derselben Art bringen ohnehin keine
+  // zusätzlichen Achievement-Punkte mehr. Das gerade bearbeitete Match
+  // selbst bleibt dabei ausgenommen, damit ein Achievement, das genau hier
+  // zum ersten Mal erreicht wird, weiterhin editierbar bleibt.
+  const lockedAchievements = useMemo(
+    () => calculateLockedSpecialAchievements(matches, initialMatch?.id ?? null),
+    [matches, initialMatch],
+  );
+
   const [matchType, setMatchType] = useState<MatchType>(initialMatch?.matchType ?? "singles");
   const [round, setRound] = useState<string>(initialMatch?.round ?? "group");
   const [playerA, setPlayerA] = useState<PlayerId | "">(
@@ -313,38 +328,62 @@ export function MatchForm({ teams, initialMatch, onSubmit, onCancel }: MatchForm
             </div>
           ))}
 
-          {relevantPlayers.map((playerId) => (
-            <div className={styles.togglesBlock} key={`${playerId}-toggles`}>
-              <span className={styles.togglesPlayerName}>{getPlayerName(playerId)}</span>
-              <div className={styles.togglesGrid}>
-                <YesNoToggle
-                  label="Bounce-Treffer"
-                  value={toBool(stats[playerId]?.bounceHits)}
-                  onChange={(v) => updateStat(playerId, "bounceHits", v ? "1" : "0")}
-                />
-                <YesNoToggle
-                  label="Island-Treffer"
-                  value={toBool(stats[playerId]?.islandHits)}
-                  onChange={(v) => updateStat(playerId, "islandHits", v ? "1" : "0")}
-                />
-                <YesNoToggle
-                  label="Bomben-Treffer"
-                  value={toBool(stats[playerId]?.bombHits)}
-                  onChange={(v) => updateStat(playerId, "bombHits", v ? "1" : "0")}
-                />
-                <YesNoToggle
-                  label="Trickshot"
-                  value={toBool(stats[playerId]?.trickshotHits)}
-                  onChange={(v) => updateStat(playerId, "trickshotHits", v ? "1" : "0")}
-                />
-                <YesNoToggle
-                  label="Ohne Umstellen gewonnen"
-                  value={(stats[playerId]?.reRacks ?? "1") === "0"}
-                  onChange={(v) => updateStat(playerId, "reRacks", v ? "0" : "1")}
-                />
+          {relevantPlayers.map((playerId) => {
+            const locked = lockedAchievements[playerId];
+            const showBounce = !locked?.has("bounce_master");
+            const showIsland = !locked?.has("island_hopper");
+            const showBomb = !locked?.has("bomb_squad");
+            const showTrickshot = !locked?.has("trickshot_artist");
+            const showRerack = !locked?.has("no_rerack_needed");
+
+            return (
+              <div className={styles.togglesBlock} key={`${playerId}-toggles`}>
+                <span className={styles.togglesPlayerName}>{getPlayerName(playerId)}</span>
+                <div className={styles.togglesGrid}>
+                  {showBounce && (
+                    <YesNoToggle
+                      label="Bounce-Treffer"
+                      value={toBool(stats[playerId]?.bounceHits)}
+                      onChange={(v) => updateStat(playerId, "bounceHits", v ? "1" : "0")}
+                    />
+                  )}
+                  {showIsland && (
+                    <YesNoToggle
+                      label="Island-Treffer"
+                      value={toBool(stats[playerId]?.islandHits)}
+                      onChange={(v) => updateStat(playerId, "islandHits", v ? "1" : "0")}
+                    />
+                  )}
+                  {showBomb && (
+                    <YesNoToggle
+                      label="Bomben-Treffer"
+                      value={toBool(stats[playerId]?.bombHits)}
+                      onChange={(v) => updateStat(playerId, "bombHits", v ? "1" : "0")}
+                    />
+                  )}
+                  {showTrickshot && (
+                    <YesNoToggle
+                      label="Trickshot"
+                      value={toBool(stats[playerId]?.trickshotHits)}
+                      onChange={(v) => updateStat(playerId, "trickshotHits", v ? "1" : "0")}
+                    />
+                  )}
+                  {showRerack && (
+                    <YesNoToggle
+                      label="Ohne Umstellen gewonnen"
+                      value={(stats[playerId]?.reRacks ?? "1") === "0"}
+                      onChange={(v) => updateStat(playerId, "reRacks", v ? "0" : "1")}
+                    />
+                  )}
+                  {locked && locked.size > 0 && (
+                    <span className={styles.lockedNote}>
+                      ✅ Bereits freigeschaltet: {[...locked].map((id) => ACHIEVEMENT_DEFINITIONS[id].name).join(", ")}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

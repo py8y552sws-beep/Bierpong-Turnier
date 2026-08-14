@@ -7,6 +7,7 @@ import {
   IconDashboard,
   IconDoubles,
   IconStreak,
+  IconTarget,
   IconTrophy,
   IconUsers,
 } from "../common/icons";
@@ -22,6 +23,7 @@ export interface NavItem {
 
 export const PRIMARY_NAV: readonly NavItem[] = [
   { to: "/", label: "Dashboard", mobileLabel: "Home", icon: IconDashboard, end: true },
+  { to: "/regeln", label: "Regeln", icon: IconTarget },
   { to: "/eingabe", label: "Ergebnis eintragen", mobileLabel: "Eingabe", icon: IconBolt },
   { to: "/spieler", label: "Spieler", icon: IconUsers },
   { to: "/einzelturnier", label: "Einzelturnier", mobileLabel: "Einzel", icon: IconTrophy },

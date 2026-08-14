@@ -70,3 +70,9 @@
   flex-direction: column;
   gap: 6px;
 }
+
+.lockedNote {
+  font-size: var(--fs-xs);
+  color: var(--accent-strong);
+  padding-top: 2px;
+}
