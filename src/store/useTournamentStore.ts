@@ -132,7 +132,7 @@ export const useTournamentStore = create<TournamentStore>()(
       // bei App-Updates nicht verloren gehen (ein neuer Name würde für
       // bestehende Nutzer:innen sonst wie ein kompletter Reset wirken).
       name: "beerpong-championship-v2",
-      version: 2,
+      version: 3,
       migrate: (persistedState, version) => {
         let state = persistedState as TournamentState;
         if (version < 1 && state?.matches) {
@@ -167,6 +167,22 @@ export const useTournamentStore = create<TournamentStore>()(
             matches = [...relabeled, ...leg2];
           }
           state = { ...state, matches };
+        }
+        if (version < 3 && state?.matches) {
+          // Migration auf v3: Platz 5-8 werden nicht mehr über ein eigenes
+          // Platzierungs-Halbfinale ausgespielt, sondern direkt aus der
+          // Vorrunden-Tabelle besetzt (Spiel um Platz 5 = Rang 5 vs. Rang 6,
+          // Spiel um Platz 7 = Rang 7 vs. Rang 8). Bereits vorhandene
+          // Platzierungs-Halbfinale-Spiele entfallen ersatzlos (ihr Ergebnis
+          // hat unter der neuen Regel keine Bedeutung mehr); bereits
+          // abgeleitete Spiele um Platz 5/7 werden über withAutoAdvance mit
+          // den korrekten Teilnehmern neu besetzt (und dabei automatisch
+          // zurückgesetzt, falls sie mit den alten, jetzt falschen
+          // Teilnehmern schon gespielt wurden).
+          const withoutConsolationSemis = state.matches.filter(
+            (m) => !(m.matchType === "singles" && (m.round as string) === "consolation_semifinal"),
+          );
+          state = { ...state, matches: withAutoAdvance(withoutConsolationSemis) };
         }
         return state;
       },
