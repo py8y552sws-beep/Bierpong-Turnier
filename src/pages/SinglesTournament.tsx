@@ -11,7 +11,6 @@ import styles from "./SinglesTournament.module.css";
 
 const KNOCKOUT_ROUNDS = [
   { round: "semifinal" as const, label: SINGLES_ROUND_LABELS.semifinal },
-  { round: "consolation_semifinal" as const, label: SINGLES_ROUND_LABELS.consolation_semifinal },
   { round: "final" as const, label: SINGLES_ROUND_LABELS.final },
   { round: "third_place" as const, label: SINGLES_ROUND_LABELS.third_place },
   { round: "fifth_place" as const, label: SINGLES_ROUND_LABELS.fifth_place },

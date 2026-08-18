@@ -3,7 +3,6 @@ import type { DoublesRound, SinglesRound } from "../types";
 export const SINGLES_ROUND_LABELS: Readonly<Record<SinglesRound, string>> = {
   group: "Vorrunde (Jeder gegen Jeden)",
   semifinal: "Halbfinale",
-  consolation_semifinal: "Platzierungs-Halbfinale (5.-8.)",
   final: "Finale",
   third_place: "Spiel um Platz 3",
   fifth_place: "Spiel um Platz 5",
@@ -18,7 +17,6 @@ export const DOUBLES_ROUND_LABELS: Readonly<Record<DoublesRound, string>> = {
 export const SINGLES_ROUNDS: readonly SinglesRound[] = [
   "group",
   "semifinal",
-  "consolation_semifinal",
   "final",
   "third_place",
   "fifth_place",

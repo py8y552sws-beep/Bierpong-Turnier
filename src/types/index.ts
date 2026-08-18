@@ -36,13 +36,13 @@ export type MatchType = "singles" | "doubles";
 /**
  * Turnierrunden. Die "terminalen" Platzierungsspiele (final, third_place,
  * fifth_place, seventh_place) bestimmen die Einzel-Endplatzierung
- * automatisch. "semifinal" bezeichnet das Halbfinale um Platz 1-4,
- * "consolation_semifinal" das Halbfinale der Vorrundenletzten um Platz 5-8.
+ * automatisch. "semifinal" bezeichnet das Halbfinale um Platz 1-4; Platz
+ * 5-8 werden direkt aus der Vorrunden-Tabelle besetzt (Rang 5 vs. Rang 6,
+ * Rang 7 vs. Rang 8), ohne eigenes Halbfinale.
  */
 export type SinglesRound =
   | "group"
   | "semifinal"
-  | "consolation_semifinal"
   | "final"
   | "third_place"
   | "fifth_place"

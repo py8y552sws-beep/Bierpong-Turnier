@@ -157,8 +157,10 @@ function loserOf(match: PlayedMatch): PlayerId {
  * keine IDs/Zeitstempel (Aufgabe des Stores).
  *
  * Plätze 1-4 der Vorrunden-Tabelle spielen im Halbfinale um den Titel
- * (Seed 1 vs. 4, Seed 2 vs. 3); Plätze 5-8 spielen im
- * Platzierungs-Halbfinale die Plätze 5-8 aus (Seed 5 vs. 8, Seed 6 vs. 7).
+ * (Seed 1 vs. 4, Seed 2 vs. 3). Plätze 5-8 werden ohne eigenes Halbfinale
+ * direkt aus der Vorrunden-Tabelle besetzt: Spiel um Platz 5 = Rang 5 vs.
+ * Rang 6, Spiel um Platz 7 = Rang 7 vs. Rang 8. Beide Zweige werden
+ * unabhängig voneinander freigeschaltet, sobald die Vorrunde komplett ist.
  */
 export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] {
   const newMatches: MatchInput[] = [];
@@ -168,16 +170,16 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
   const groupMatches = singlesMatches.filter((m) => m.round === "group");
   const groupComplete = groupMatches.length === 28 && groupMatches.every(isMatchPlayed);
 
-  if (groupComplete && !hasRound("semifinal") && !hasRound("consolation_semifinal")) {
+  if (groupComplete) {
     const standings = calculateSinglesGroupStandings(matches);
     const [r1, r2, r3, r4, r5, r6, r7, r8] = standings.map((s) => s.playerId);
-    if (r1 && r2 && r3 && r4 && r5 && r6 && r7 && r8) {
-      newMatches.push(
-        singlesMatchInput("semifinal", r1, r4),
-        singlesMatchInput("semifinal", r2, r3),
-        singlesMatchInput("consolation_semifinal", r5, r8),
-        singlesMatchInput("consolation_semifinal", r6, r7),
-      );
+
+    if (!hasRound("semifinal") && r1 && r2 && r3 && r4) {
+      newMatches.push(singlesMatchInput("semifinal", r1, r4), singlesMatchInput("semifinal", r2, r3));
+    }
+
+    if (!hasRound("fifth_place") && !hasRound("seventh_place") && r5 && r6 && r7 && r8) {
+      newMatches.push(singlesMatchInput("fifth_place", r5, r6), singlesMatchInput("seventh_place", r7, r8));
     }
   }
 
@@ -192,31 +194,16 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
     }
   }
 
-  const consolationSemifinals = singlesMatches.filter((m) => m.round === "consolation_semifinal");
-  if (
-    consolationSemifinals.length === 2 &&
-    consolationSemifinals.every(isMatchPlayed) &&
-    !hasRound("fifth_place") &&
-    !hasRound("seventh_place")
-  ) {
-    const [semi1, semi2] = consolationSemifinals;
-    if (semi1 && semi2) {
-      newMatches.push(
-        singlesMatchInput("fifth_place", winnerOf(semi1), winnerOf(semi2)),
-        singlesMatchInput("seventh_place", loserOf(semi1), loserOf(semi2)),
-      );
-    }
-  }
-
   return newMatches;
 }
 
 /**
- * Korrigiert bereits abgeleitete K.O.-Matches (Finale, Spiel um Platz 3/5/7),
- * falls sich Sieger/Verlierer einer Vorstufe nachträglich ändern – z.B. weil
- * ein Halbfinal-Ergebnis nach dem Speichern noch einmal korrigiert wird.
+ * Korrigiert bereits abgeleitete K.O.-Matches (Halbfinale, Finale, Spiel um
+ * Platz 3/5/7), falls sich Sieger/Verlierer bzw. die Vorrunden-Tabelle einer
+ * Vorstufe nachträglich ändern – z.B. weil ein Halbfinal- oder Vorrunden-
+ * Ergebnis nach dem Speichern noch einmal korrigiert wird.
  * `deriveNextStageMatches` legt Folge-Matches nur EINMAL an und lässt sie
- * danach unangetastet; ohne diese Korrektur würde ein bereits erzeugtes
+ * danach unangetastet; ohne diese Korrektur würde z.B. ein bereits erzeugtes
  * Finale weiterhin den alten (falschen) Sieger als Teilnehmer führen. War
  * das betroffene Match bereits gespielt, gehört dieses Ergebnis nicht mehr
  * zu den neu ermittelten Teilnehmern und wird deshalb auf "offen"
@@ -225,7 +212,6 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
 export function reconcileDerivedMatches(matches: readonly Match[]): readonly Match[] {
   const singlesMatches = matches.filter((m) => m.matchType === "singles");
   const semifinals = singlesMatches.filter((m) => m.round === "semifinal");
-  const consolationSemifinals = singlesMatches.filter((m) => m.round === "consolation_semifinal");
 
   let result = matches;
 
@@ -235,10 +221,13 @@ export function reconcileDerivedMatches(matches: readonly Match[]): readonly Mat
     result = reconcileRoundParticipants(result, "third_place", loserOf(semi1), loserOf(semi2));
   }
 
-  if (consolationSemifinals.length === 2 && consolationSemifinals.every(isMatchPlayed)) {
-    const [semi1, semi2] = consolationSemifinals as [PlayedMatch, PlayedMatch];
-    result = reconcileRoundParticipants(result, "fifth_place", winnerOf(semi1), winnerOf(semi2));
-    result = reconcileRoundParticipants(result, "seventh_place", loserOf(semi1), loserOf(semi2));
+  const groupMatches = singlesMatches.filter((m) => m.round === "group");
+  const groupComplete = groupMatches.length === 28 && groupMatches.every(isMatchPlayed);
+  if (groupComplete) {
+    const standings = calculateSinglesGroupStandings(matches);
+    const [, , , , r5, r6, r7, r8] = standings.map((s) => s.playerId);
+    if (r5 && r6) result = reconcileRoundParticipants(result, "fifth_place", r5, r6);
+    if (r7 && r8) result = reconcileRoundParticipants(result, "seventh_place", r7, r8);
   }
 
   return result;
