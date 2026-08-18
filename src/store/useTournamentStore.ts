@@ -78,6 +78,24 @@ function withAutoAdvance(matches: readonly Match[]): Match[] {
   return derived.length > 0 ? [...reconciled, ...derived] : [...reconciled];
 }
 
+/**
+ * Entfernt inzwischen obsolete Rundenarten (aktuell: das ehemalige
+ * Platzierungs-Halbfinale) und bringt den K.O.-Baum danach über
+ * withAutoAdvance auf den korrekten Stand. Wird sowohl bei der lokalen
+ * Storage-Migration (v2 -> v3) als auch beim Anwenden eines Firebase-
+ * Sync-Snapshots verwendet, damit ein Turnierstand aus einer älteren
+ * App-Version über beide Wege gleich sauber ankommt – ein Gerät, das den
+ * Cloud-Sync nutzt und die App noch nicht neu geladen hat, würde den
+ * alten Stand sonst immer wieder zurück in das gemeinsame Dokument
+ * schreiben.
+ */
+export function normalizeIncomingMatches(matches: readonly Match[]): Match[] {
+  const withoutObsoleteRounds = matches.filter(
+    (m) => !(m.matchType === "singles" && (m.round as string) === "consolation_semifinal"),
+  );
+  return withAutoAdvance(withoutObsoleteRounds);
+}
+
 export const useTournamentStore = create<TournamentStore>()(
   persist(
     (set) => ({
@@ -179,10 +197,7 @@ export const useTournamentStore = create<TournamentStore>()(
           // den korrekten Teilnehmern neu besetzt (und dabei automatisch
           // zurückgesetzt, falls sie mit den alten, jetzt falschen
           // Teilnehmern schon gespielt wurden).
-          const withoutConsolationSemis = state.matches.filter(
-            (m) => !(m.matchType === "singles" && (m.round as string) === "consolation_semifinal"),
-          );
-          state = { ...state, matches: withAutoAdvance(withoutConsolationSemis) };
+          state = { ...state, matches: normalizeIncomingMatches(state.matches) };
         }
         return state;
       },

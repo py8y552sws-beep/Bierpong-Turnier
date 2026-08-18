@@ -1,7 +1,7 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { doc, getFirestore, onSnapshot, setDoc, type Firestore } from "firebase/firestore";
 import { FIREBASE_CONFIG, isFirebaseConfigured } from "../lib/firebaseConfig";
-import { useTournamentStore, type TournamentState } from "./useTournamentStore";
+import { normalizeIncomingMatches, useTournamentStore, type TournamentState } from "./useTournamentStore";
 
 /**
  * Geräteübergreifender Cloud-Sync über ein einziges gemeinsames
@@ -123,12 +123,30 @@ export function initFirebaseSync(): void {
       const data = snapshot.data() as Partial<TournamentState>;
       if (!data.teams || !data.matches || !data.predictions) return;
 
-      const remoteSerialized = serialize(data as TournamentState);
+      // Normalisieren, falls das geteilte Dokument noch von einer älteren
+      // App-Version stammt (z.B. mit inzwischen obsoleten Rundenarten) –
+      // ein veralteter Snapshot soll nicht ungefiltert übernommen werden.
+      const normalized: TournamentState = {
+        teams: data.teams,
+        matches: normalizeIncomingMatches(data.matches),
+        predictions: data.predictions,
+      };
+
+      const remoteSerialized = serialize(normalized);
       const localSerialized = serialize(useTournamentStore.getState());
       if (remoteSerialized !== localSerialized) {
         applyingRemoteUpdate = true;
-        useTournamentStore.setState({ teams: data.teams, matches: data.matches, predictions: data.predictions });
+        useTournamentStore.setState(normalized);
         applyingRemoteUpdate = false;
+      }
+
+      // Falls die Normalisierung den Snapshot inhaltlich verändert hat (z.B.
+      // ein veraltetes gemeinsames Dokument mit obsoleten Rundenarten),
+      // den bereinigten Stand direkt zurückschreiben, damit das geteilte
+      // Dokument selbst dauerhaft sauber bleibt statt bei jedem Client
+      // erneut normalisiert werden zu müssen.
+      if (remoteSerialized !== serialize(data as TournamentState)) {
+        void pushNow(normalized);
       }
 
       setStatus("synced");
