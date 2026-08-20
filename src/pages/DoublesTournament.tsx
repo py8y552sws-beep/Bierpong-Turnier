@@ -21,6 +21,8 @@ export function DoublesTournament() {
   const teams = useTeams();
   const matches = useMatches();
   const doublesMatches = matches.filter((m) => m.matchType === "doubles");
+  const roundRobinMatches = doublesMatches.filter((m) => m.round === "round_robin_1" || m.round === "round_robin_2");
+  const finalMatches = doublesMatches.filter((m) => m.round === "final");
   const standings = useDoublesStandings();
   const placements = useDoublesPlacements();
 
@@ -31,7 +33,7 @@ export function DoublesTournament() {
     <>
       <PageHeader
         title="Doppelturnier"
-        subtitle="4 Teams · Hin- und Rückrunde (12 Spiele, 6 pro Spieler), die Endplatzierung ergibt sich aus der Abschlusstabelle."
+        subtitle="4 Teams · Hin- und Rückrunde (12 Spiele, 6 pro Spieler), danach Finale zwischen Tabellenplatz 1 und 2 um den Titel."
       />
 
       {championTeam && (
@@ -92,7 +94,18 @@ export function DoublesTournament() {
       <div style={{ height: 20 }} />
 
       <Card title="Rundenspiele" subtitle="Hinrunde und Rückrunde, je 6 Spiele">
-        <MatchList matches={doublesMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." showRound showAchievements />
+        <MatchList matches={roundRobinMatches} teams={teams} emptyMessage="Noch keine Spiele angesetzt." showRound showAchievements />
+      </Card>
+
+      <div style={{ height: 20 }} />
+
+      <Card title="Finale" subtitle="Tabellenplatz 1 gegen Tabellenplatz 2 – entscheidet über den Turniersieger Doppel">
+        <MatchList
+          matches={finalMatches}
+          teams={teams}
+          emptyMessage="Steht erst nach Abschluss von Hin- und Rückrunde fest."
+          showAchievements
+        />
       </Card>
 
       <div style={{ height: 20 }} />

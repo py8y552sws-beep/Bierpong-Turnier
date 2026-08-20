@@ -94,9 +94,10 @@ export const MAX_LOSS_MARGIN_FOR_NO_BIG_LOSS = 5;
 
 /**
  * Terminale Einzel-Runden, aus denen sich Endplatzierungen automatisch
- * ergeben. Das Doppelturnier hat keine terminalen Runden – dort ergibt
- * sich die Platzierung direkt aus der Abschlusstabelle der Punktrunde
- * (siehe calculateDoublesStandings).
+ * ergeben. Beim Doppelturnier stehen Platz 3/4 direkt aus der
+ * Abschlusstabelle der Punktrunde fest (siehe calculateDoublesStandings);
+ * Platz 1/2 entscheidet zusätzlich das Finale zwischen den beiden
+ * Tabellenersten.
  */
 export const SINGLES_PLACEMENT_ROUNDS = [
   "final",

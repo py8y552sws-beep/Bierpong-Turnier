@@ -128,7 +128,7 @@ export function initFirebaseSync(): void {
       // ein veralteter Snapshot soll nicht ungefiltert übernommen werden.
       const normalized: TournamentState = {
         teams: data.teams,
-        matches: normalizeIncomingMatches(data.matches),
+        matches: normalizeIncomingMatches(data.matches, data.teams),
         predictions: data.predictions,
       };
 
