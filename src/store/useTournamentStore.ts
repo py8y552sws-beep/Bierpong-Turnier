@@ -72,9 +72,9 @@ function buildInitialState(teams: readonly DoublesTeam[]): TournamentState {
  * Verlierer einer Vorstufe nachträglich geändert haben, und hängt danach
  * neu ableitbare Folge-Matches an, sofern welche entstanden sind.
  */
-function withAutoAdvance(matches: readonly Match[]): Match[] {
-  const reconciled = reconcileDerivedMatches(matches);
-  const derived = deriveNextStageMatches(reconciled).map(materialize);
+function withAutoAdvance(matches: readonly Match[], teams: readonly DoublesTeam[]): Match[] {
+  const reconciled = reconcileDerivedMatches(matches, teams);
+  const derived = deriveNextStageMatches(reconciled, teams).map(materialize);
   return derived.length > 0 ? [...reconciled, ...derived] : [...reconciled];
 }
 
@@ -89,11 +89,11 @@ function withAutoAdvance(matches: readonly Match[]): Match[] {
  * alten Stand sonst immer wieder zurück in das gemeinsame Dokument
  * schreiben.
  */
-export function normalizeIncomingMatches(matches: readonly Match[]): Match[] {
+export function normalizeIncomingMatches(matches: readonly Match[], teams: readonly DoublesTeam[]): Match[] {
   const withoutObsoleteRounds = matches.filter(
     (m) => !(m.matchType === "singles" && (m.round as string) === "consolation_semifinal"),
   );
-  return withAutoAdvance(withoutObsoleteRounds);
+  return withAutoAdvance(withoutObsoleteRounds, teams);
 }
 
 export const useTournamentStore = create<TournamentStore>()(
@@ -122,12 +122,12 @@ export const useTournamentStore = create<TournamentStore>()(
 
       addMatch: (input) =>
         set((state) => ({
-          matches: withAutoAdvance([...state.matches, materialize(input)]),
+          matches: withAutoAdvance([...state.matches, materialize(input)], state.teams),
         })),
 
       updateMatch: (id, input) =>
         set((state) => ({
-          matches: withAutoAdvance(state.matches.map((m) => (m.id === id ? { ...m, ...input } : m))),
+          matches: withAutoAdvance(state.matches.map((m) => (m.id === id ? { ...m, ...input } : m)), state.teams),
         })),
 
       deleteMatch: (id) =>
@@ -150,7 +150,7 @@ export const useTournamentStore = create<TournamentStore>()(
       // bei App-Updates nicht verloren gehen (ein neuer Name würde für
       // bestehende Nutzer:innen sonst wie ein kompletter Reset wirken).
       name: "beerpong-championship-v2",
-      version: 3,
+      version: 4,
       migrate: (persistedState, version) => {
         let state = persistedState as TournamentState;
         if (version < 1 && state?.matches) {
@@ -197,7 +197,18 @@ export const useTournamentStore = create<TournamentStore>()(
           // den korrekten Teilnehmern neu besetzt (und dabei automatisch
           // zurückgesetzt, falls sie mit den alten, jetzt falschen
           // Teilnehmern schon gespielt wurden).
-          state = { ...state, matches: normalizeIncomingMatches(state.matches) };
+          const teamsV3 = state.teams?.length === 4 ? state.teams : DEFAULT_DOUBLES_TEAMS;
+          state = { ...state, matches: normalizeIncomingMatches(state.matches, teamsV3) };
+        }
+        if (version < 4 && state?.matches) {
+          // Migration auf v4: Nach Hin- und Rückrunde entscheidet jetzt ein
+          // Finale zwischen Tabellenplatz 1 und 2 über den Doppel-Sieger,
+          // statt die Platzierung direkt aus der Abschlusstabelle
+          // abzuleiten (Platz 3/4 stehen weiterhin direkt fest). Für ein
+          // bereits laufendes Turnier mit abgeschlossener Punktrunde wird
+          // das Finale hier einmalig automatisch nachträglich angesetzt.
+          const teamsV4 = state.teams?.length === 4 ? state.teams : DEFAULT_DOUBLES_TEAMS;
+          state = { ...state, matches: withAutoAdvance(state.matches, teamsV4) };
         }
         return state;
       },

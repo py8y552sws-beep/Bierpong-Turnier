@@ -75,10 +75,11 @@ function singlesSemifinalists(matches: readonly Match[]): PlayerId[] {
 }
 
 /**
- * "Finale Doppel" gibt es im reinen Punktrundenformat nicht mehr als
- * eigenes Match – als tatsächliche Antwort gelten die beiden Teams auf
- * Platz 1 und 2 der Abschlusstabelle (erst befüllt, wenn die Punktrunde
- * komplett gespielt ist).
+ * Als tatsächliche Antwort für "Finale Doppel" gelten die beiden Teams auf
+ * Platz 1 und 2 – das sind exakt die beiden Finalisten des Doppel-Finales.
+ * Predictions werden ohnehin erst nach vollständigem Turnierabschluss
+ * ausgewertet (siehe calculatePredictionResults), das Finale ist dann
+ * bereits gespielt.
  */
 function doublesFinalists(
   doublesPlacements: Partial<Record<TeamId, number>>,

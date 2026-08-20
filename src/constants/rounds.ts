@@ -12,6 +12,7 @@ export const SINGLES_ROUND_LABELS: Readonly<Record<SinglesRound, string>> = {
 export const DOUBLES_ROUND_LABELS: Readonly<Record<DoublesRound, string>> = {
   round_robin_1: "Hinrunde",
   round_robin_2: "Rückrunde",
+  final: "Finale",
 };
 
 export const SINGLES_ROUNDS: readonly SinglesRound[] = [
@@ -23,7 +24,7 @@ export const SINGLES_ROUNDS: readonly SinglesRound[] = [
   "seventh_place",
 ];
 
-export const DOUBLES_ROUNDS: readonly DoublesRound[] = ["round_robin_1", "round_robin_2"];
+export const DOUBLES_ROUNDS: readonly DoublesRound[] = ["round_robin_1", "round_robin_2", "final"];
 
 export function roundLabel(matchType: "singles" | "doubles", round: string): string {
   if (matchType === "singles") return SINGLES_ROUND_LABELS[round as SinglesRound] ?? round;

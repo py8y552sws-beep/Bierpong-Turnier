@@ -47,21 +47,37 @@ export function calculateSinglesPlacements(
 }
 
 /**
- * Leitet die Endplatzierung (1-4) jedes Doppel-Teams automatisch aus der
- * Abschlusstabelle der Punktrunde ab (siehe calculateDoublesStandings).
- * Erst vollständig befüllt, sobald alle Rundenspiele gespielt sind.
+ * Leitet die Endplatzierung (1-4) jedes Doppel-Teams automatisch ab. Platz
+ * 3 und 4 stehen bereits direkt aus der Abschlusstabelle der Punktrunde
+ * fest (siehe calculateDoublesStandings), sobald diese komplett gespielt
+ * ist. Platz 1 und 2 entscheidet erst das Finale zwischen den beiden
+ * Tabellenersten – bis dieses gespielt ist, bleiben sie offen.
  */
 export function calculateDoublesTeamPlacements(
   matches: readonly Match[],
   teams: readonly DoublesTeam[],
 ): Partial<Record<TeamId, PlacementRank>> {
-  if (!isDoublesTournamentComplete(matches, teams)) return {};
+  if (teams.length !== 4) return {};
+  const roundRobinMatches = getPlayedMatches(matches).filter(
+    (m) => m.matchType === "doubles" && (m.round === "round_robin_1" || m.round === "round_robin_2"),
+  );
+  if (roundRobinMatches.length !== DOUBLES_ROUND_ROBIN_MATCH_COUNT) return {};
 
   const standings = calculateDoublesStandings(matches, teams);
   const placements: Partial<Record<TeamId, PlacementRank>> = {};
-  standings.forEach((entry, index) => {
-    placements[entry.teamId] = (index + 1) as PlacementRank;
-  });
+  const third = standings[2];
+  const fourth = standings[3];
+  if (third) placements[third.teamId] = 3;
+  if (fourth) placements[fourth.teamId] = 4;
+
+  const finalMatch = getPlayedMatches(matches).find((m) => m.matchType === "doubles" && m.round === "final");
+  if (finalMatch) {
+    const winnerSide = finalMatch.scoreA > finalMatch.scoreB ? finalMatch.sideA : finalMatch.sideB;
+    const loserSide = finalMatch.scoreA > finalMatch.scoreB ? finalMatch.sideB : finalMatch.sideA;
+    if (winnerSide.teamId) placements[winnerSide.teamId] = 1;
+    if (loserSide.teamId) placements[loserSide.teamId] = 2;
+  }
+
   return placements;
 }
 
@@ -102,10 +118,12 @@ export function isDoublesTournamentComplete(
   teams: readonly DoublesTeam[],
 ): boolean {
   if (teams.length !== 4) return false;
-  const playedRoundRobin = getPlayedMatches(matches).filter(
+  const played = getPlayedMatches(matches);
+  const playedRoundRobin = played.filter(
     (m) => m.matchType === "doubles" && (m.round === "round_robin_1" || m.round === "round_robin_2"),
   );
-  return playedRoundRobin.length === DOUBLES_ROUND_ROBIN_MATCH_COUNT;
+  const finalPlayed = played.some((m) => m.matchType === "doubles" && m.round === "final");
+  return playedRoundRobin.length === DOUBLES_ROUND_ROBIN_MATCH_COUNT && finalPlayed;
 }
 
 /** Das gesamte Turnier gilt als beendet, sobald beide Wettbewerbe final entschieden sind. */

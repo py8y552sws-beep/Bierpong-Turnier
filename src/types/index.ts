@@ -50,10 +50,11 @@ export type SinglesRound =
 
 /**
  * Das Doppelturnier besteht aus einer Hin- und einer Rückrunde (jedes Team
- * spielt zweimal gegen jedes andere); die Endplatzierung ergibt sich
- * automatisch aus der Abschlusstabelle, es gibt keine K.O.-Phase.
+ * spielt zweimal gegen jedes andere). Platz 3 und 4 stehen danach direkt aus
+ * der Abschlusstabelle fest; Platz 1 und 2 entscheidet ein Finale zwischen
+ * den beiden Tabellenersten.
  */
-export type DoublesRound = "round_robin_1" | "round_robin_2";
+export type DoublesRound = "round_robin_1" | "round_robin_2" | "final";
 
 export type MatchRound = SinglesRound | DoublesRound;
 

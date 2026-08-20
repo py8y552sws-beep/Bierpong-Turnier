@@ -1,6 +1,8 @@
+import { DOUBLES_ROUND_ROBIN_MATCH_COUNT } from "../constants/points";
 import { PLAYER_IDS } from "../constants/players";
-import type { DoublesRound, DoublesTeam, Match, MatchInput, PlayerId, SinglesRound } from "../types";
+import type { DoublesRound, DoublesTeam, Match, MatchInput, PlayerId, SinglesRound, TeamId } from "../types";
 import { shuffle } from "../utils/random";
+import { calculateDoublesStandings } from "./doublesStandings";
 import { calculateSinglesGroupStandings } from "./groupStandings";
 import { isMatchPlayed, type PlayedMatch } from "./matchStatus";
 
@@ -68,6 +70,9 @@ export function reshuffleUpcomingMatches(matches: readonly Match[]): Match[] {
   const upcomingDoublesLeg2 = shuffle(
     matches.filter((m) => isUpcoming(m) && m.matchType === "doubles" && m.round === "round_robin_2"),
   );
+  const upcomingDoublesFinal = shuffle(
+    matches.filter((m) => isUpcoming(m) && m.matchType === "doubles" && m.round === "final"),
+  );
 
   const baseTime = Date.now();
   const reordered = [
@@ -75,6 +80,7 @@ export function reshuffleUpcomingMatches(matches: readonly Match[]): Match[] {
     ...upcomingSinglesKnockout,
     ...upcomingDoublesLeg1,
     ...upcomingDoublesLeg2,
+    ...upcomingDoublesFinal,
   ].map((m, index) => ({
     ...m,
     createdAt: new Date(baseTime + index).toISOString(),
@@ -161,8 +167,12 @@ function loserOf(match: PlayedMatch): PlayerId {
  * direkt aus der Vorrunden-Tabelle besetzt: Spiel um Platz 5 = Rang 5 vs.
  * Rang 6, Spiel um Platz 7 = Rang 7 vs. Rang 8. Beide Zweige werden
  * unabhängig voneinander freigeschaltet, sobald die Vorrunde komplett ist.
+ *
+ * Beim Doppelturnier entscheidet nach Hin- und Rückrunde ein Finale
+ * zwischen Tabellenplatz 1 und 2 über den Turniersieger; Platz 3/4 stehen
+ * bereits direkt aus der Abschlusstabelle fest und benötigen kein Match.
  */
-export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] {
+export function deriveNextStageMatches(matches: readonly Match[], teams: readonly DoublesTeam[]): MatchInput[] {
   const newMatches: MatchInput[] = [];
   const singlesMatches = matches.filter((m) => m.matchType === "singles");
   const hasRound = (round: string) => singlesMatches.some((m) => m.round === round);
@@ -194,6 +204,18 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
     }
   }
 
+  const doublesMatches = matches.filter((m) => m.matchType === "doubles");
+  const roundRobinMatches = doublesMatches.filter((m) => m.round === "round_robin_1" || m.round === "round_robin_2");
+  const roundRobinComplete =
+    teams.length === 4 && roundRobinMatches.length === DOUBLES_ROUND_ROBIN_MATCH_COUNT && roundRobinMatches.every(isMatchPlayed);
+
+  if (roundRobinComplete && !doublesMatches.some((m) => m.round === "final")) {
+    const [first, second] = calculateDoublesStandings(matches, teams);
+    const teamA = first && teams.find((t) => t.id === first.teamId);
+    const teamB = second && teams.find((t) => t.id === second.teamId);
+    if (teamA && teamB) newMatches.push(doublesMatchInput(teamA, teamB, "final"));
+  }
+
   return newMatches;
 }
 
@@ -207,9 +229,11 @@ export function deriveNextStageMatches(matches: readonly Match[]): MatchInput[] 
  * Finale weiterhin den alten (falschen) Sieger als Teilnehmer führen. War
  * das betroffene Match bereits gespielt, gehört dieses Ergebnis nicht mehr
  * zu den neu ermittelten Teilnehmern und wird deshalb auf "offen"
- * zurückgesetzt – es muss neu eingetragen werden.
+ * zurückgesetzt – es muss neu eingetragen werden. Analog wird beim
+ * Doppelturnier das Finale auf die aktuellen Tabellenplätze 1/2
+ * abgeglichen, falls sich die Punktrunden-Tabelle nachträglich ändert.
  */
-export function reconcileDerivedMatches(matches: readonly Match[]): readonly Match[] {
+export function reconcileDerivedMatches(matches: readonly Match[], teams: readonly DoublesTeam[]): readonly Match[] {
   const singlesMatches = matches.filter((m) => m.matchType === "singles");
   const semifinals = singlesMatches.filter((m) => m.round === "semifinal");
 
@@ -230,6 +254,15 @@ export function reconcileDerivedMatches(matches: readonly Match[]): readonly Mat
     if (r7 && r8) result = reconcileRoundParticipants(result, "seventh_place", r7, r8);
   }
 
+  const doublesMatches = matches.filter((m) => m.matchType === "doubles");
+  const roundRobinMatches = doublesMatches.filter((m) => m.round === "round_robin_1" || m.round === "round_robin_2");
+  const roundRobinComplete =
+    teams.length === 4 && roundRobinMatches.length === DOUBLES_ROUND_ROBIN_MATCH_COUNT && roundRobinMatches.every(isMatchPlayed);
+  if (roundRobinComplete) {
+    const [first, second] = calculateDoublesStandings(matches, teams);
+    if (first && second) result = reconcileDoublesFinalParticipants(result, first.teamId, second.teamId, teams);
+  }
+
   return result;
 }
 
@@ -247,6 +280,31 @@ function reconcileRoundParticipants(
       ...m,
       sideA: { playerIds: [expectedA] },
       sideB: { playerIds: [expectedB] },
+      scoreA: null,
+      scoreB: null,
+      playerStats: [],
+    };
+  });
+}
+
+function reconcileDoublesFinalParticipants(
+  matches: readonly Match[],
+  expectedTeamAId: TeamId,
+  expectedTeamBId: TeamId,
+  teams: readonly DoublesTeam[],
+): Match[] {
+  const teamA = teams.find((t) => t.id === expectedTeamAId);
+  const teamB = teams.find((t) => t.id === expectedTeamBId);
+  if (!teamA || !teamB) return [...matches];
+
+  return matches.map((m) => {
+    if (m.matchType !== "doubles" || m.round !== "final") return m;
+    if (m.sideA.teamId === expectedTeamAId && m.sideB.teamId === expectedTeamBId) return m;
+
+    return {
+      ...m,
+      sideA: { playerIds: [...teamA.playerIds], teamId: teamA.id },
+      sideB: { playerIds: [...teamB.playerIds], teamId: teamB.id },
       scoreA: null,
       scoreB: null,
       playerStats: [],

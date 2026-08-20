@@ -86,7 +86,8 @@ export function Rules() {
         </p>
         <ol className={styles.steps}>
           <li>Hin- und Rückrunde: jedes Team spielt zweimal gegen jedes andere Team.</li>
-          <li>Platzierung ergibt sich aus der Abschlusstabelle (Siege, Cup-Differenz) – keine K.O.-Runde.</li>
+          <li>Platz 3 und 4 stehen direkt aus der Abschlusstabelle fest (Siege, Cup-Differenz).</li>
+          <li>Platz 1 und 2 entscheidet ein Finale zwischen den beiden Tabellenersten.</li>
         </ol>
         <p className={styles.text}>Punkte pro Spieler nach Team-Platzierung:</p>
         <div className={tableStyles.tableWrap}>
